@@ -30,6 +30,11 @@ COPY --from=build /build/target/escolar-0.0.1-SNAPSHOT.jar /app/app.jar
 
 # Carpeta de archivos subidos (materiales).
 RUN mkdir -p /app/archivos && chown -R appuser:appuser /app
+
+# Script de entrada (se copia y se hace ejecutable antes del cambio de usuario).
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh && chown appuser:appuser /app/entrypoint.sh
+
 USER appuser
 
 EXPOSE 8080
@@ -39,6 +44,4 @@ ENV JAVA_OPTS="-XX:MaxRAMPercentage=70.0 -Djava.security.egd=file:/dev/./urandom
 # Verifica que el JAR exista (si no, falla aqui y no al arrancar).
 RUN test -f /app/app.jar
 
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
