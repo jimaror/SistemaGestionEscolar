@@ -1,31 +1,42 @@
-# ---------- Build ----------
-# Java 25 (igual que el pom.xml, que exige [25,26)).
+# ============================================================
+#  Backend - Colegio Otto de la Rocha
+#  Build en 2 etapas: compila con Maven (JDK 25) y ejecuta con JRE 25.
+# ============================================================
+
+# ---------- Etapa 1: Compilar ----------
 FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /build
 
-# Descargar dependencias primero (cache de Docker)
-COPY pom.xml .
-RUN mvn -B dependency:go-offline -Dmaven.enforcer.skip=true
+# Solo el pom: cache de las dependencias entre builds.
+COPY pom.xml ./
+RUN mvn -B -q dependency:go-offline -Dmaven.enforcer.skip=true || true
 
-# Copiar el codigo y compilar
+# Codigo fuente y compilacion.
 COPY src ./src
-RUN mvn -B clean package -DskipTests -Dmaven.enforcer.skip=true
+RUN mvn -B clean package \
+        -DskipTests \
+        -Dmaven.enforcer.skip=true \
+        -Dmaven.test.skip=true \
+        -Djacoco.skip=true
 
-# ---------- Runtime ----------
+# ---------- Etapa 2: Ejecutar ----------
 FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
-# Crear usuario sin privilegios
+# Usuario sin privilegios.
 RUN useradd -ms /bin/bash -u 10001 appuser
 
-COPY --from=build /build/target/escolar-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/escolar-0.0.1-SNAPSHOT.jar /app/app.jar
 
-# Carpeta para archivos subidos
+# Carpeta de archivos subidos (materiales).
 RUN mkdir -p /app/archivos && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8080
 
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=70.0 -Djava.security.egd=file:/dev/./urandom"
+
+# Verifica que el JAR exista (si no, falla aqui y no al arrancar).
+RUN test -f /app/app.jar
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
