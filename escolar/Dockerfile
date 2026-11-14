@@ -1,5 +1,6 @@
 # ---------- Build ----------
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Java 25 (igual que el pom.xml, que exige [25,26)).
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /build
 
 # Descargar dependencias primero (cache de Docker)
@@ -11,7 +12,7 @@ COPY src ./src
 RUN mvn -B clean package -DskipTests -Dmaven.enforcer.skip=true
 
 # ---------- Runtime ----------
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 # Crear usuario sin privilegios

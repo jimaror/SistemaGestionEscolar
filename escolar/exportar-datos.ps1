@@ -1,10 +1,12 @@
-# Exporta los datos de SQL Server a un archivo SQL para PostgreSQL,
-# usando sqlcmd (viene con el Client SDK de SQL Server).
+# ============================================================================
+#  Exporta las tablas de SQL Server a un archivo SQL para PostgreSQL.
 #
-#   - Genera INSERTs con los nombres de columna reales.
-#   - Conserva los ids, asi que las claves foraneas siguen validas.
-#   - El esquema de SQL Server fue creado con las mismas entidades JPA,
-#     por eso coincide con el que Hibernate genera en PostgreSQL.
+#  - Usa sqlcmd (viene con el Client SDK de SQL Server).
+#  - Los nombres de columna son los reales del esquema.
+#  - Los ids se conservan, asi que las claves foraneas siguen validas.
+#  - La salida va en UTF-8 sin BOM, con el separador de columnas
+#    remplazado por | para no romper los datos que lo contengan.
+# ============================================================================
 
 $ErrorActionPreference = 'Stop'
 
@@ -14,7 +16,7 @@ $db     = 'SistemaGestionEscolar'
 $user   = 'sa'
 $pass   = '1234'
 
-# Tablas en orden de dependencia (para que las FK se satisfagan).
+# Tablas en orden de dependencia.
 $tablas = @(
   'roles','anios_escolares','grados','secciones','asignaturas','usuarios',
   'maestros','alumnos','tutores','alumno_tutor','matriculas',
@@ -39,26 +41,43 @@ $sb = New-Object System.Text.StringBuilder
 $total = 0
 
 foreach ($t in $tablas) {
-    # -W quita los guiones de preenchido, -s"|" usa pipes como separador,
-    # -h-1 desactiva los encabezados, -Q ejecuta la consulta.
-    $sql = "SET NOCOUNT ON; SELECT * FROM [$t];"
-    $out = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 -Q $sql 2>$null
+    # Columnas reales, en orden, con QUOTENAME para nombres con caracteres raros.
+    $cols = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 `
+        -Q "SET NOCOUNT ON; SELECT STRING_AGG(QUOTENAME(COLUMN_NAME), ',') FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$t';" 2>$null |
+        Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 1
+
+    if (-not $cols) {
+        Write-Host "  (sin columnas) $t" -ForegroundColor DarkGray
+        continue
+    }
+    $cols = $cols.Trim()
+
+    # Nombres de columna单独 para saber cuales son numericos (sin comillas).
+    $tipos = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 `
+        -Q "SET NOCOUNT ON; SELECT STRING_AGG(COLUMN_NAME + ':' + DATA_TYPE, ',') FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$t';" 2>$null |
+        Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 1
+
+    $esNumerico = @{}
+    if ($tipos) {
+        foreach ($par in $tipos.Trim().Split(',')) {
+            $kv = $par.Split(':')
+            if ($kv.Count -eq 2) {
+                $tipo = $kv[1].Trim()
+                $esNumerico[$kv[0].Trim()] = ($tipo -match '^(int|bigint|smallint|tinyint|decimal|numeric|real|double|float|bit|boolean)$')
+            }
+        }
+    }
+
+    # Datos.
+    $out = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 `
+        -Q "SET NOCOUNT ON; SELECT * FROM [$t];" 2>$null
 
     if (-not $out -or $out.Count -eq 0) {
         Write-Host "  (vacio) $t" -ForegroundColor DarkGray
         continue
     }
 
-    # Cabecera con los nombres de columna.
-    $head = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 -Q "SET NOCOUNT ON; SELECT TOP 0 * FROM [$t];" 2>$null
-
-    # sqlcmd imprime la cabecera en la primera consulta; la recuperamos aparte
-    # con -h-1 y nombres explicitos via information_schema.
-    $cols = & $SQLCMD -S $server -d $db -U $user -P $pass -C -W -s '|' -h -1 -Q "SET NOCOUNT ON; SELECT STRING_AGG(QUOTENAME(COLUMN_NAME), ',') FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$t';" 2>$null
-
-    $colList = $cols | Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 1
-    if (-not $colList) { continue }
-    $colList = $colList.Trim()
+    $nombres = $cols.Split(',') | ForEach-Object { $_.Trim().Trim('[', ']') }
 
     [void]$sb.AppendLine('-- ---------------------------------------------------------')
     [void]$sb.AppendLine("--  $t ($($out.Count) registros)")
@@ -66,18 +85,27 @@ foreach ($t in $tablas) {
 
     foreach ($linea in $out) {
         if (-not $linea) { continue }
-        if ($linea -match '^\s*-+(\s*-+)*\s*$') { continue }  # separador
+        if ($linea -match '^\s*-+(\s*-+)*\s*$') { continue }
 
         $partes = $linea -split '\|'
         $vals = @()
-        foreach ($p in $partes) {
-            $p = $p.Trim()
-            if ($p -eq 'NULL' -or $p -eq '') { $vals += 'NULL'; continue }
-            # Los NULL de sqlcmd vienen como la cadena vacia en columnas de
-            # texto; los numericos NULL se detectan por estar vacios tambien.
-            $vals += ("'" + $p.Replace("'", "''") + "'")
+
+        for ($i = 0; $i -lt $nombres.Count; $i++) {
+            $nombre = $nombres[$i]
+            $valor = if ($i -lt $partes.Count) { $partes[$i].Trim() } else { '' }
+
+            if ($valor -eq '' -or $valor -eq 'NULL') {
+                $vals += 'NULL'
+            } elseif ($esNumerico[$nombre]) {
+                # Numero: sin comillas (PostgreSQL lo rechaza con comillas).
+                $vals += $valor
+            } else {
+                # Texto: comillas simples, con el apostrophe escapado.
+                $vals += "'" + $valor.Replace("'", "''") + "'"
+            }
         }
-        [void]$sb.AppendLine("INSERT INTO $t ($colList) VALUES (" + ($vals -join ', ') + ');')
+
+        [void]$sb.AppendLine("INSERT INTO $t ($cols) VALUES (" + ($vals -join ', ') + ');')
     }
 
     [void]$sb.AppendLine('')
