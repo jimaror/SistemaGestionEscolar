@@ -321,7 +321,7 @@ export default function DashboardPage() {
                 calificaciones, mensajes y novedades del colegio desde un solo lugar.
               </p>
               <p className="mt-4 text-xs font-medium capitalize text-white/80 sm:text-sm">
-                {fecha} · Ciclo escolar 2026
+                {fecha}
               </p>
             </div>
 

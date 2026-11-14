@@ -24,7 +24,6 @@ import {
   MessageIcon,
   SendIcon,
   ShieldIcon,
-  SparklesIcon,
   UserCircleIcon,
   UsersIcon,
   XIcon,
@@ -334,18 +333,6 @@ export function AppShell({
             </div>
           ))}
         </nav>
-
-        {!colapsado && (
-          <div className="mx-3 mb-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-white">
-              <SparklesIcon className="h-4 w-4 text-fuchsia-300" />
-              Ciclo escolar 2026
-            </div>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-              Año lectivo en curso.
-            </p>
-          </div>
-        )}
 
         <div className="border-t border-white/10 p-3">
           <button
