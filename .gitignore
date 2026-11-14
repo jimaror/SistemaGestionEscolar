@@ -1,0 +1,56 @@
+# ===== Compilacion =====
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===== Variables de entorno =====
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ===== Archivos subidos por los usuarios =====
+archivos/
+/escolar/archivos/
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== Sistema operativo / editores =====
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ===== Secretos =====
+secreto.txt
+secretos.txt
+*.pem
+*.key
+
+# ===== Binarios y utilidades locales =====
+# El tunel de Cloudflare (55 MB) se descarga aparte, no va al repo.
+cloudflared.exe
+ngrok.exe
+*.exe
+!*.bat
+
+# ===== Datos exportados (se generan con exportar-datos.ps1) =====
+datos-postgres.sql
+esquema-entities.json

@@ -1,0 +1,53 @@
+# Despliegue automatico en Render (render.com)
+# Backend Spring Boot + PostgreSQL gratis, con deploy desde el repositorio.
+#
+# Uso:
+#   1) Sube este proyecto a GitHub
+#   2) En Render: New > Blueprint > selecciona el repo
+#   3) Render crea el web service y la base de datos PostgreSQL
+#      y conecta las variables de entorno automaticamente.
+#
+# Despues desplega el frontend en Vercel:
+#   1) cd frontend
+#   2) npx vercel --prod
+#   3) En Vercel: Settings > Environment Variables > BACKEND_URL
+#      = https://<tu-servicio>.onrender.com
+#      y NEXT_PUBLIC_API_URL = /api
+
+services:
+  - type: web
+    name: escolar-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/auth/login
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: escolar-db
+          property: connectionString
+      - key: DB_USER
+        fromDatabase:
+          name: escolar-db
+          property: username
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: escolar-db
+          property: password
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DDL_AUTO
+        value: update
+      - key: CORS_ORIGENES
+        value: http://localhost:3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JAVA_VERSION
+        value: "21"
+
+databases:
+  - name: escolar-db
+    databaseName: escolar
+    plan: free
+    postgresMajorVersion: "16"
