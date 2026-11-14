@@ -22,15 +22,15 @@ services:
     envVars:
       - key: DB_URL
         fromDatabase:
-          name: escolar-db
+          name: escolar
           property: connectionString
       - key: DB_USER
         fromDatabase:
-          name: escolar-db
+          name: escolar
           property: user
       - key: DB_PASSWORD
         fromDatabase:
-          name: escolar-db
+          name: escolar
           property: password
       - key: DB_DRIVER
         value: org.postgresql.Driver
@@ -67,7 +67,7 @@ services:
         value: /api
 
 databases:
-  - name: escolar-db
+  - name: escolar
     databaseName: escolar
     plan: free
     postgresMajorVersion: "16"
