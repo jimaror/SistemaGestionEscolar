@@ -15,12 +15,20 @@ import { NextRequest } from "next/server";
 // URL del backend Spring Boot.
 //
 // - En desarrollo local: http://localhost:8080
-// - En la nube (Vercel/Render): la variable de entorno BACKEND_URL
+// - En la nube: la variable de entorno BACKEND_URL
+//   (Render entrega solo el host, sin protocolo; Vercel entrega la URL
+//    completa). Se normaliza para que funcione en ambos casos.
 //
-// El valor por defecto se lee en tiempo de ejecucion (no en build), asi que
-// el mismo build sirve para local y para produccion.
-const BACKEND =
-  process.env.BACKEND_URL?.replace(/\/+$/, "") || "http://localhost:8080";
+// El valor se lee en tiempo de ejecucion (no en build), asi que el mismo
+// build sirve para local y para produccion.
+function urlDelBackend(): string {
+  const crudo = process.env.BACKEND_URL?.trim();
+  if (!crudo) return "http://localhost:8080";
+  const conProtocolo = /^https?:\/\//i.test(crudo) ? crudo : `https://${crudo}`;
+  return conProtocolo.replace(/\/+$/, "");
+}
+
+const BACKEND = urlDelBackend();
 
 // Headers que nunca se deben reenviar al backend.
 const HEADERS_A_OMITIR = new Set([
@@ -54,8 +62,8 @@ async function proxear(
     }
   });
   // Origin fijo permitido por el backend (proxy servidor-a-servidor).
+  // El valor debe estar en CORS_ORIGENES del backend.
   headers.set("origin", "http://localhost:3000");
-
   const tieneCuerpo =
     request.method !== "GET" && request.method !== "HEAD";
 

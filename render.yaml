@@ -1,0 +1,71 @@
+# ============================================================
+#  Colegio Otto de la Rocha - Despliegue en Render
+#  Backend Spring Boot + PostgreSQL (ambos en el plan gratis)
+#
+#  Render lee este archivo desde la RAIZ del repositorio.
+#  Crea las dos cosas de una vez:
+#    - escolar-backend : web service con Docker (Spring Boot)
+#    - escolar-db      : PostgreSQL 16
+#
+#  Nota: el Dockerfile esta en escolar/, por eso las rutas
+#  empiezan con "escolar/".
+# ============================================================
+
+services:
+  - type: web
+    name: escolar-backend
+    runtime: docker
+    dockerfilePath: ./escolar/Dockerfile
+    dockerContext: ./escolar
+    plan: free
+    healthCheckPath: /api/salud
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: escolar-db
+          property: connectionString
+      - key: DB_USER
+        fromDatabase:
+          name: escolar-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: escolar-db
+          property: password
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DDL_AUTO
+        value: update
+      - key: CORS_ORIGENES
+        # El proxy de Next.js reenvia las peticiones con este Origin.
+        # Se agrega el dominio del frontend cuando se desplegue.
+        value: http://localhost:3000,https://escolar-frontend.onrender.com,https://escolar-frontend.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+
+  # ------------------------------------------------------------
+  #  Frontend Next.js (tambien en el plan gratis de Render)
+  #  URL: https://escolar-frontend.onrender.com
+  # ------------------------------------------------------------
+  - type: web
+    name: escolar-frontend
+    runtime: node
+    rootDir: escolar/frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /login
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          name: escolar-backend
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_API_URL
+        value: /api
+
+databases:
+  - name: escolar-db
+    databaseName: escolar
+    plan: free
+    postgresMajorVersion: "16"
