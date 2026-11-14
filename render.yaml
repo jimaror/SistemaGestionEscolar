@@ -65,12 +65,9 @@ services:
     healthCheckPath: /login
     envVars:
       - key: BACKEND_URL
-        # Render entrega solo el host (sin https://). El proxy de Next.js
-        # (src/app/api/[...path]/route.ts) normaliza y agrega el protocolo.
-        fromService:
-          name: escolar-backend
-          type: web
-          property: host
+        # URL publica del backend (Render no expone "url" como propiedad,
+        # asi que la usamos directamente).
+        value: https://escolar-backend-vw07.onrender.com
       - key: NEXT_PUBLIC_API_URL
         value: /api
 
