@@ -32,8 +32,9 @@ COPY --from=build /build/target/escolar-0.0.1-SNAPSHOT.jar /app/app.jar
 RUN mkdir -p /app/archivos && chown -R appuser:appuser /app
 
 # Script de entrada (se copia y se hace ejecutable antes del cambio de usuario).
+# sed: corrige finales de linea CRLF de Windows para que /bin/sh lo entienda.
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh && chown appuser:appuser /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh && chown appuser:appuser /app/entrypoint.sh
 
 USER appuser
 
