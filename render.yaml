@@ -20,10 +20,14 @@ services:
     plan: free
     healthCheckPath: /api/salud
     envVars:
-      - key: DB_URL
+      - key: DB_HOST
         fromDatabase:
           name: escolar
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: escolar
+          property: port
       - key: DB_USER
         fromDatabase:
           name: escolar
@@ -32,6 +36,10 @@ services:
         fromDatabase:
           name: escolar
           property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: escolar
+          property: database
       - key: DB_DRIVER
         value: org.postgresql.Driver
       - key: DDL_AUTO
