@@ -342,7 +342,7 @@ export function AppShell({
               Ciclo escolar 2026
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-              Sistema conectado al backend escolar en tiempo real.
+              Año lectivo en curso.
             </p>
           </div>
         )}
