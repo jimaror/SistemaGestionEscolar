@@ -649,25 +649,6 @@ export default function DashboardPage() {
           </Card>
         </section>
 
-        {/* Aviso de alcance */}
-        <section className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-              <CheckIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Métricas conectadas a la API
-              </p>
-              <p className="text-xs text-slate-500">
-                Todas las métricas se calculan con datos reales del backend:
-                asistencia, promedio, alumnos, reuniones, tareas, materiales,
-                mensajes, justificaciones y matrículas.
-              </p>
-            </div>
-          </div>
-          <Badge variant="success">Datos en tiempo real</Badge>
-        </section>
       </div>
     </AppShell>
   );
