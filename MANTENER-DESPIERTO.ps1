@@ -51,17 +51,20 @@ Write-Host '  Para detener: cerra esta ventana'               -ForegroundColor C
 Write-Host '===============================================' -ForegroundColor Cyan
 Write-Host ''
 
-if ($AbrirNavegador) {
-    Write-Host 'Abriendo el sistema en el navegador...' -ForegroundColor Cyan
-    Start-Process $frontend
-}
-
 do {
     $todosOk = $true
     foreach ($servicio in $servicios) {
         if (-not (Probar-Servicio $servicio)) {
             $todosOk = $false
         }
+    }
+
+    # Recien cuando ambos responden abrimos el navegador, para no
+    # mostrar la pantalla de espera de Render.
+    if ($todosOk -and $AbrirNavegador) {
+        Write-Host 'Abriendo el sistema en el navegador...' -ForegroundColor Cyan
+        Start-Process $frontend
+        $AbrirNavegador = $false
     }
 
     if ($UnaVez) { break }
