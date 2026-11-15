@@ -47,6 +47,7 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 interface FilaTarea {
   id: number;
@@ -99,6 +100,7 @@ export default function TareasPage() {
   const [busqueda, setBusqueda] = useState("");
   const [materiaFiltro, setMateriaFiltro] = useState("todas");
   const [estadoFiltro, setEstadoFiltro] = useState("todas");
+  const [pestana, setPestana] = useState<"pendientes" | "entregadas" | "todas">("pendientes");
   const [seleccionada, setSeleccionada] = useState<FilaTarea | null>(null);
   const [rol, setRol] = useState("");
 
@@ -202,9 +204,19 @@ export default function TareasPage() {
     [filas]
   );
 
+  const esAlumno = rol === "Alumno";
+  const esTutor = rol === "Tutor";
+  const puedeGestionar = rol === "Director" || rol === "Maestro";
+
   const filtradas = useMemo(() => {
     const q = normalizar(busqueda);
     return filas.filter((fila) => {
+      // Filtro de pestaña para alumnos y tutores
+      if (esAlumno || esTutor) {
+        if (pestana === "pendientes" && (fila.entregaPropia || fila.vencida)) return false;
+        if (pestana === "entregadas" && !fila.entregaPropia) return false;
+      }
+
       const texto = normalizar(
         `${fila.titulo} ${fila.descripcion} ${fila.materia} ${fila.seccion} ${fila.docente}`
       );
@@ -217,11 +229,7 @@ export default function TareasPage() {
         (estadoFiltro === "cerradas" && !fila.activa);
       return coincideTexto && coincideMateria && coincideEstado;
     });
-  }, [filas, busqueda, materiaFiltro, estadoFiltro]);
-
-  const esAlumno = rol === "Alumno";
-  const esTutor = rol === "Tutor";
-  const puedeGestionar = rol === "Director" || rol === "Maestro";
+  }, [filas, busqueda, materiaFiltro, estadoFiltro, pestana, esAlumno, esTutor]);
 
   // Opciones para los selects del formulario
   const opcionesAsignacion = useMemo(() => {
@@ -423,6 +431,70 @@ export default function TareasPage() {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          {/* Pestañas estilo MariaPaz */}
+          {(esAlumno || esTutor) && (
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4 mb-4">
+              <button
+                type="button"
+                onClick={() => setPestana("pendientes")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all",
+                  pestana === "pendientes"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"
+                )}
+              >
+                <span>📌 Pendientes de entrega</span>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[11px] font-bold",
+                    pestana === "pendientes"
+                      ? "bg-white/25 text-white"
+                      : "bg-slate-200 text-slate-700"
+                  )}
+                >
+                  {filas.filter((f) => !f.entregaPropia && !f.vencida).length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPestana("entregadas")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all",
+                  pestana === "entregadas"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"
+                )}
+              >
+                <span>✅ Entregadas y Calificadas</span>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[11px] font-bold",
+                    pestana === "entregadas"
+                      ? "bg-white/25 text-white"
+                      : "bg-slate-200 text-slate-700"
+                  )}
+                >
+                  {filas.filter((f) => !!f.entregaPropia).length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPestana("todas")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all",
+                  pestana === "todas"
+                    ? "bg-slate-900 text-white shadow-md"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"
+                )}
+              >
+                <span>Todas ({filas.length})</span>
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-sm">
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -476,7 +548,7 @@ export default function TareasPage() {
                 {filtradas.map((fila) => (
                   <article
                     key={fila.id}
-                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    className="card-hover group flex flex-col rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-300"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">

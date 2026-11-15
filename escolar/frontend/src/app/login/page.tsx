@@ -42,6 +42,13 @@ const VENTAJAS = [
   },
 ];
 
+const DEMOS = [
+  { label: "👨‍💼 Director", user: "director1", emoji: "👨‍💼", color: "from-purple-600 to-indigo-600" },
+  { label: "👩‍🏫 Maestro", user: "maestra_ana", emoji: "👩‍🏫", color: "from-blue-600 to-cyan-500" },
+  { label: "🎓 Alumno", user: "alumno_juan", emoji: "🎓", color: "from-emerald-600 to-teal-500" },
+];
+const PASS_DEMO = "pass123";
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +57,35 @@ export default function LoginPage() {
   const [verPassword, setVerPassword] = useState(false);
   const [despertando, setDespertando] = useState(true);
   const [intentoArranque, setIntentoArranque] = useState(0);
+  const [demoActivo, setDemoActivo] = useState<string | null>(null);
   const router = useRouter();
+
+  const entrarDemo = async (user: string) => {
+    setDemoActivo(user);
+    setError(null);
+    setUsername(user);
+    setPassword(PASS_DEMO);
+    setLoading(true);
+    try {
+      const listo = await despertarBackend((i) => setIntentoArranque(i));
+      setDespertando(false);
+      if (!listo) { setError("El servidor está tardando. Intentá de nuevo."); return; }
+      let data;
+      try { data = await login({ username: user, password: PASS_DEMO }); }
+      catch (err) {
+        if (!esFallaDeArranque(err)) throw err;
+        await new Promise((r) => setTimeout(r, 4000));
+        data = await login({ username: user, password: PASS_DEMO });
+      }
+      guardarSesion(data);
+      router.push("/dashboard");
+    } catch {
+      setError("No se pudo iniciar sesión de demostración.");
+    } finally {
+      setLoading(false);
+      setDemoActivo(null);
+    }
+  };
 
   // Apenas se abre la pantalla, empezamos a despertar el backend en
   // segundo plano. Asi, cuando la persona termina de escribir, el
@@ -250,6 +285,37 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            {/* ── Accesos de demostración ── */}
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-4">
+              <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                🎭 Accesos de demostración
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEMOS.map((demo) => (
+                  <button
+                    key={demo.user}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void entrarDemo(demo.user)}
+                    className={`relative flex flex-col items-center gap-1 overflow-hidden rounded-xl bg-gradient-to-br ${demo.color} px-2 py-2.5 text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-60`}
+                  >
+                    {demoActivo === demo.user && (
+                      <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/20">
+                        <LoaderIcon className="h-4 w-4 animate-spin text-white" />
+                      </span>
+                    )}
+                    <span className="text-xl leading-none">{demo.emoji}</span>
+                    <span className="text-[11px] font-bold leading-tight">
+                      {demo.label.replace(demo.emoji + " ", "")}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-center text-[10px] text-slate-400">
+                Solo para presentación · No compartir
+              </p>
+            </div>
 
             <p className="mt-6 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">
               Nicaragua · América Central

@@ -151,3 +151,82 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
 }
+
+/* ===== Boleta de Calificaciones — impresión ===== */
+@media print {
+  /* Ocultar todo lo que no es contenido */
+  aside,
+  nav,
+  header,
+  footer,
+  [data-no-print],
+  .no-print,
+  button,
+  [role="toolbar"] {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Plus Jakarta Sans', serif !important;
+    font-size: 11pt;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Forzar fondo blanco en tarjetas */
+  section,
+  article,
+  .card-hover,
+  table,
+  tr,
+  td,
+  th {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    break-inside: avoid;
+  }
+
+  /* Encabezado de boleta */
+  .print-boleta-header {
+    display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 2px solid #1e1b4b;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Tabla de notas: bordes visibles */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th, td {
+    border: 1px solid #94a3b8 !important;
+    padding: 6px 10px !important;
+    text-align: left !important;
+  }
+  thead tr {
+    background: #e0e7ff !important;
+    color: #1e1b4b !important;
+    font-weight: 700;
+  }
+
+  /* Columna de nota: resaltar */
+  td:last-child {
+    font-weight: 700;
+    text-align: center !important;
+  }
+
+  @page {
+    margin: 15mm 20mm;
+    size: A4 portrait;
+  }
+}
