@@ -1406,7 +1406,7 @@ public class ServicioAutorizacion {
         // Alumno y tutor: solo reuniones donde son participantes.
         Integer usuarioId = usuarioId();
         return usuarioId != null
-                && reunionParticipantes.existsByReunionIdAndUsuario_Id(reunion.getId(), usuarioId);
+                && reunionParticipantes.existsByReunion_IdAndUsuario_Id(reunion.getId(), usuarioId);
     }
 
     public void exigirVerReunion(Reunion reunion) {
@@ -1515,7 +1515,7 @@ public class ServicioAutorizacion {
         }
         Integer usuarioId = usuarioId();
         return usuarioId != null
-                && reunionParticipantes.existsByReunionIdAndUsuario_Id(reunionId, usuarioId);
+                && reunionParticipantes.existsByReunion_IdAndUsuario_Id(reunionId, usuarioId);
     }
 
     public void exigirVerReunionId(Integer reunionId) {
