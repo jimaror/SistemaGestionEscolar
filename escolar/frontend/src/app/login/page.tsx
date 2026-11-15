@@ -42,8 +42,6 @@ const VENTAJAS = [
   },
 ];
 
-const VENTAJAS = [
-
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
