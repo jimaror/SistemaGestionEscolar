@@ -43,7 +43,10 @@ import {
   AlertIcon,
   CalendarIcon,
   CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClipboardIcon,
+  ClockIcon,
   EditIcon,
   PlusIcon,
   RefreshIcon,
@@ -51,6 +54,7 @@ import {
   TrashIcon,
   TrendingUpIcon,
 } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 const ESTADOS_ASISTENCIA = ["Presente", "Ausente", "Tardanza", "Justificada"];
 
@@ -87,6 +91,43 @@ export default function AsistenciasPage() {
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [rol, setRol] = useState("");
+
+  // Estado de vista y calendario
+  const [vista, setVista] = useState<"calendario" | "lista">("calendario");
+  const [diaSeleccionado, setDiaSeleccionado] = useState<string | null>(null);
+  const [mesActivo, setMesActivo] = useState(new Date().getMonth());
+  const [anioActivo, setAnioActivo] = useState(new Date().getFullYear());
+
+  const mesesNombre = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  const diasSemana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+  const anteriorMes = () => {
+    if (mesActivo === 0) {
+      setMesActivo(11);
+      setAnioActivo((a) => a - 1);
+    } else {
+      setMesActivo((m) => m - 1);
+    }
+  };
+
+  const siguienteMes = () => {
+    if (mesActivo === 11) {
+      setMesActivo(0);
+      setAnioActivo((a) => a + 1);
+    } else {
+      setMesActivo((m) => m + 1);
+    }
+  };
+
+  const irAHoy = () => {
+    const h = new Date();
+    setMesActivo(h.getMonth());
+    setAnioActivo(h.getFullYear());
+    setDiaSeleccionado(h.toISOString().slice(0, 10));
+  };
 
   // Estado del formulario CRUD
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -194,6 +235,52 @@ export default function AsistenciasPage() {
     ).length;
     return { total, presentes, ausentes, tardanzas, asistencia: porcentaje(presentes, total) };
   }, [filas]);
+
+  const matrizCalendario = useMemo(() => {
+    const primerDiaMes = new Date(anioActivo, mesActivo, 1).getDay();
+    const offsetLunes = (primerDiaMes + 6) % 7;
+    const diasEnMes = new Date(anioActivo, mesActivo + 1, 0).getDate();
+
+    const mapaAsistencias = new Map<string, FilaAsistencia[]>();
+    filas.forEach((f) => {
+      if (!f.fecha) return;
+      const lista = mapaAsistencias.get(f.fecha) ?? [];
+      lista.push(f);
+      mapaAsistencias.set(f.fecha, lista);
+    });
+
+    const casillas: Array<{
+      dia: number | null;
+      fechaStr: string;
+      items: FilaAsistencia[];
+      esHoy: boolean;
+    }> = [];
+
+    for (let i = 0; i < offsetLunes; i++) {
+      casillas.push({ dia: null, fechaStr: "", items: [], esHoy: false });
+    }
+
+    const fechaHoyStr = new Date().toISOString().slice(0, 10);
+
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+      const mesStr = String(mesActivo + 1).padStart(2, "0");
+      const diaStr = String(dia).padStart(2, "0");
+      const fechaStr = `${anioActivo}-${mesStr}-${diaStr}`;
+      casillas.push({
+        dia,
+        fechaStr,
+        items: mapaAsistencias.get(fechaStr) ?? [],
+        esHoy: fechaStr === fechaHoyStr,
+      });
+    }
+
+    return casillas;
+  }, [anioActivo, mesActivo, filas]);
+
+  const asistenciasDelDia = useMemo(() => {
+    if (!diaSeleccionado) return [];
+    return filas.filter((f) => f.fecha === diaSeleccionado);
+  }, [diaSeleccionado, filas]);
 
   const esAlumno = rol === "Alumno";
   const puedeGestionar = rol === "Director" || rol === "Maestro";
@@ -382,106 +469,403 @@ export default function AsistenciasPage() {
           />
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-sm">
-              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                placeholder={esAlumno ? "Buscar por estado o fecha…" : "Buscar estudiante o sección…"}
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  type="date"
-                  value={fechaFiltro}
-                  onChange={(e) => setFechaFiltro(e.target.value)}
-                  className="w-44 pl-9"
-                  aria-label="Filtrar por fecha"
-                />
-              </div>
-              <Select
-                value={estadoFiltro}
-                onChange={(e) => setEstadoFiltro(e.target.value)}
-                className="w-40"
-                aria-label="Filtrar por estado"
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          {/* Barra de control superior: Selector de vista y leyenda de semáforo */}
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between bg-white">
+            <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => setVista("calendario")}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  vista === "calendario"
+                    ? "bg-white text-indigo-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                )}
               >
-                <option value="todos">Todos los estados</option>
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
-                ))}
-              </Select>
+                <CalendarIcon className="h-4 w-4" />
+                Vista Calendario
+              </button>
+              <button
+                type="button"
+                onClick={() => setVista("lista")}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  vista === "lista"
+                    ? "bg-white text-indigo-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <ClipboardIcon className="h-4 w-4" />
+                Lista de Registros
+              </button>
+            </div>
+
+            {/* Leyenda Semáforo */}
+            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1.5 text-slate-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-xs" /> Presente
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-xs" /> Tardanza
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-sky-500 shadow-xs" /> Justificada
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-xs" /> Ausente
+              </span>
             </div>
           </div>
 
           {cargando ? (
-            <div className="p-4">
+            <div className="p-8">
               <Cargando texto="Cargando asistencias…" />
             </div>
           ) : error ? (
-            <div className="p-4">
+            <div className="p-6">
               <ErrorEstado mensaje={error} onReintentar={() => void cargar()} />
             </div>
-          ) : filtradas.length === 0 ? (
-            <div className="p-4">
-              <Vacio
-                titulo="Sin registros"
-                descripcion="No hay asistencias que coincidan con los filtros seleccionados."
-              />
-            </div>
-          ) : (
-            <>
-              <div className="hidden overflow-x-auto md:block">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
-                      <th className="px-4 py-3 font-semibold">Estudiante</th>
-                      <th className="px-4 py-3 font-semibold">Fecha</th>
-                      <th className="px-4 py-3 font-semibold">Estado</th>
-                      <th className="px-4 py-3 font-semibold">Observación</th>
-                      {puedeGestionar && (
-                        <th className="px-4 py-3 text-right font-semibold">
-                          Acciones
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filtradas.map((fila) => (
-                      <tr key={fila.id} className="transition hover:bg-slate-50/70">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[11px] font-bold text-white">
+          ) : vista === "calendario" ? (
+            /* ===== VISTA CALENDARIO MENSUAL ===== */
+            <div>
+              {/* Barra de Navegación del Mes */}
+              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={anteriorMes}
+                    className="h-8 w-8 p-0"
+                    aria-label="Mes anterior"
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </Button>
+                  <span className="text-base font-bold text-slate-900 capitalize">
+                    {mesesNombre[mesActivo]} {anioActivo}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={siguienteMes}
+                    className="h-8 w-8 p-0"
+                    aria-label="Mes siguiente"
+                  >
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:inline text-xs text-slate-500">
+                    Haz clic en un día para ver detalle
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={irAHoy}
+                    className="text-xs font-semibold"
+                  >
+                    Hoy
+                  </Button>
+                </div>
+              </div>
+
+              {/* Cuadrícula de 7 Días */}
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-400 mb-2">
+                  {diasSemana.map((d) => (
+                    <div key={d} className="py-1">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                  {matrizCalendario.map((casilla, idx) => {
+                    if (!casilla.dia) {
+                      return (
+                        <div
+                          key={`empty-${idx}`}
+                          className="h-20 sm:h-24 rounded-xl bg-slate-50/40 border border-transparent"
+                        />
+                      );
+                    }
+                    const estaSeleccionado = diaSeleccionado === casilla.fechaStr;
+                    return (
+                      <button
+                        key={casilla.fechaStr}
+                        type="button"
+                        onClick={() =>
+                          setDiaSeleccionado(
+                            estaSeleccionado ? null : casilla.fechaStr
+                          )
+                        }
+                        className={cn(
+                          "group relative flex flex-col justify-between h-20 sm:h-24 rounded-xl p-1.5 sm:p-2 text-left transition-all border",
+                          casilla.esHoy
+                            ? "border-indigo-500 bg-indigo-50/20 font-bold"
+                            : "border-slate-100 bg-white hover:border-slate-300 hover:shadow-xs",
+                          estaSeleccionado &&
+                            "ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/50"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                            casilla.esHoy
+                              ? "bg-indigo-600 text-white font-bold"
+                              : "text-slate-700"
+                          )}
+                        >
+                          {casilla.dia}
+                        </span>
+
+                        <div className="flex flex-wrap gap-1 mt-auto">
+                          {casilla.items.slice(0, 4).map((item) => (
+                            <span
+                              key={item.id}
+                              title={`${item.estudiante}: ${item.estado}`}
+                              className={cn(
+                                "h-2 w-2 rounded-full",
+                                normalizar(item.estado).includes("present") &&
+                                  "bg-emerald-500",
+                                normalizar(item.estado).includes("tard") &&
+                                  "bg-amber-500",
+                                normalizar(item.estado).includes("justific") &&
+                                  "bg-sky-500",
+                                normalizar(item.estado).includes("ausent") &&
+                                  "bg-red-500"
+                              )}
+                            />
+                          ))}
+                          {casilla.items.length > 4 && (
+                            <span className="text-[10px] font-bold text-slate-400">
+                              +{casilla.items.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Panel de Detalle del Día Seleccionado */}
+              {diaSeleccionado && (
+                <div className="border-t border-slate-100 p-4 sm:p-6 bg-slate-50/70">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900">
+                        Asistencias del {formatearFecha(diaSeleccionado)}
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        {asistenciasDelDia.length}{" "}
+                        {asistenciasDelDia.length === 1
+                          ? "registro encontrado"
+                          : "registros encontrados"}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDiaSeleccionado(null)}
+                      className="text-xs text-slate-500"
+                    >
+                      Cerrar detalle ✕
+                    </Button>
+                  </div>
+
+                  {asistenciasDelDia.length === 0 ? (
+                    <p className="text-xs text-slate-500 py-3">
+                      No hay registros de asistencia en esta fecha.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {asistenciasDelDia.map((fila) => (
+                        <div
+                          key={fila.id}
+                          className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[11px] font-bold text-white shadow-xs">
                               {fila.iniciales}
                             </span>
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-slate-900">
+                              <p className="truncate font-semibold text-sm text-slate-900">
                                 {fila.estudiante}
                               </p>
-                              <p className="truncate text-xs text-slate-500">{fila.seccion}</p>
+                              <p className="truncate text-xs text-slate-500">
+                                {fila.seccion}
+                              </p>
+                              {fila.observacion && fila.observacion !== "—" && (
+                                <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                  {fila.observacion}
+                                </p>
+                              )}
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-slate-700">{fila.fechaTexto}</td>
-                        <td className="px-4 py-3">
-                          <Badge variant={varianteEstado(fila.estado)}>{fila.estado}</Badge>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{fila.observacion}</td>
-                        {puedeGestionar && (
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1">
+                          <Badge variant={varianteEstado(fila.estado)}>
+                            {fila.estado}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* ===== VISTA DE LISTA FILTRABLE ===== */
+            <div>
+              <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between bg-slate-50/30">
+                <div className="relative w-full lg:max-w-sm">
+                  <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder={
+                      esAlumno
+                        ? "Buscar por estado o fecha…"
+                        : "Buscar estudiante o sección…"
+                    }
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      type="date"
+                      value={fechaFiltro}
+                      onChange={(e) => setFechaFiltro(e.target.value)}
+                      className="w-44 pl-9"
+                      aria-label="Filtrar por fecha"
+                    />
+                  </div>
+                  <Select
+                    value={estadoFiltro}
+                    onChange={(e) => setEstadoFiltro(e.target.value)}
+                    className="w-40"
+                    aria-label="Filtrar por estado"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    {estados.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {estado}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              {filtradas.length === 0 ? (
+                <div className="p-4">
+                  <Vacio
+                    titulo="Sin registros"
+                    descripcion="No hay asistencias que coincidan con los filtros seleccionados."
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
+                          <th className="px-4 py-3 font-semibold">Estudiante</th>
+                          <th className="px-4 py-3 font-semibold">Fecha</th>
+                          <th className="px-4 py-3 font-semibold">Estado</th>
+                          <th className="px-4 py-3 font-semibold">Observación</th>
+                          {puedeGestionar && (
+                            <th className="px-4 py-3 text-right font-semibold">
+                              Acciones
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filtradas.map((fila) => (
+                          <tr
+                            key={fila.id}
+                            className="transition hover:bg-slate-50/70"
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[11px] font-bold text-white shadow-xs">
+                                  {fila.iniciales}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-slate-900">
+                                    {fila.estudiante}
+                                  </p>
+                                  <p className="truncate text-xs text-slate-500">
+                                    {fila.seccion}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-slate-700">
+                              {fila.fechaTexto}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge variant={varianteEstado(fila.estado)}>
+                                {fila.estado}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {fila.observacion}
+                            </td>
+                            {puedeGestionar && (
+                              <td className="px-4 py-3">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => abrirEditar(fila)}
+                                  >
+                                    <EditIcon className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => solicitarEliminar(fila.id)}
+                                    disabled={rol !== "Director"}
+                                    className="text-red-500 hover:bg-red-50"
+                                  >
+                                    <TrashIcon className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="divide-y divide-slate-100 md:hidden">
+                    {filtradas.map((fila) => (
+                      <div key={fila.id} className="flex items-start gap-3 p-4">
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[11px] font-bold text-white shadow-xs">
+                          {fila.iniciales}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-slate-900">
+                            {fila.estudiante}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {fila.fechaTexto} · {fila.seccion}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {fila.observacion}
+                          </p>
+                          {puedeGestionar && (
+                            <div className="flex items-center gap-1 pt-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => abrirEditar(fila)}
                               >
                                 <EditIcon className="h-3.5 w-3.5" />
+                                Editar
                               </Button>
                               <Button
                                 variant="ghost"
@@ -491,61 +875,23 @@ export default function AsistenciasPage() {
                                 className="text-red-500 hover:bg-red-50"
                               >
                                 <TrashIcon className="h-3.5 w-3.5" />
+                                Eliminar
                               </Button>
                             </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="divide-y divide-slate-100 md:hidden">
-                {filtradas.map((fila) => (
-                  <div key={fila.id} className="flex items-start gap-3 p-4">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[11px] font-bold text-white">
-                      {fila.iniciales}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-900">{fila.estudiante}</p>
-                      <p className="text-xs text-slate-500">
-                        {fila.fechaTexto} · {fila.seccion}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">{fila.observacion}</p>
-                      {puedeGestionar && (
-                        <div className="flex items-center gap-1 pt-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => abrirEditar(fila)}
-                          >
-                            <EditIcon className="h-3.5 w-3.5" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => solicitarEliminar(fila.id)}
-                            disabled={rol !== "Director"}
-                            className="text-red-500 hover:bg-red-50"
-                          >
-                            <TrashIcon className="h-3.5 w-3.5" />
-                            Eliminar
-                          </Button>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <Badge variant={varianteEstado(fila.estado)}>{fila.estado}</Badge>
+                        <Badge variant={varianteEstado(fila.estado)}>
+                          {fila.estado}
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </>
-          )}
 
-          {!cargando && !error && (
-            <div className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
-              Mostrando {filtradas.length} de {filas.length} registros
+                  <div className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
+                    Mostrando {filtradas.length} de {filas.length} registros
+                  </div>
+                </>
+              )}
             </div>
           )}
         </section>
