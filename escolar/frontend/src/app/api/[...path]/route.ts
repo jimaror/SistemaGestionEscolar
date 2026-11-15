@@ -30,6 +30,41 @@ function urlDelBackend(): string {
 
 const BACKEND = urlDelBackend();
 
+// El plan gratuito de Render suspende el backend y tarda ~1 minuto en
+// despertarlo. Esperamos hasta 95 segundos por intento (el navegador
+// espera 110) y reintentamos solo las consultas seguras.
+const TIEMPO_MAXIMO_MS = 95_000;
+
+async function reenviarAlBackend(
+  destino: string,
+  opciones: RequestInit,
+  intentos: number,
+): Promise<Response> {
+  let ultimoError: unknown;
+
+  for (let intento = 1; intento <= intentos; intento++) {
+    try {
+      return await fetch(destino, {
+        ...opciones,
+        signal: AbortSignal.timeout(TIEMPO_MAXIMO_MS),
+      });
+    } catch (error) {
+      ultimoError = error;
+      const nombre = (error as { name?: string })?.name;
+      // Si se agoto el tiempo, no tiene sentido insistir en el mismo
+      // intento: el cliente hara un nuevo sondeo.
+      if (nombre === "TimeoutError" || nombre === "AbortError") break;
+      if (intento < intentos) {
+        await new Promise((resolver) =>
+          setTimeout(resolver, 1500 * intento)
+        );
+      }
+    }
+  }
+
+  throw ultimoError;
+}
+
 // Headers que nunca se deben reenviar al backend.
 const HEADERS_A_OMITIR = new Set([
   "origin",
@@ -68,13 +103,21 @@ async function proxear(
     request.method !== "GET" && request.method !== "HEAD";
 
   try {
-    const respuesta = await fetch(destino, {
-      method: request.method,
-      headers,
-      body: tieneCuerpo ? await request.arrayBuffer() : undefined,
-      redirect: "manual",
-      cache: "no-store",
-    });
+    // Solo reintentamos metodos seguros para no duplicar altas o pagos.
+    const intentos =
+      request.method === "GET" || request.method === "HEAD" ? 3 : 1;
+
+    const respuesta = await reenviarAlBackend(
+      destino,
+      {
+        method: request.method,
+        headers,
+        body: tieneCuerpo ? await request.arrayBuffer() : undefined,
+        redirect: "manual",
+        cache: "no-store",
+      },
+      intentos
+    );
 
     const nuevosHeaders = new Headers();
     respuesta.headers.forEach((valor, clave) => {
@@ -102,13 +145,25 @@ async function proxear(
       headers: nuevosHeaders,
     });
   } catch (error) {
+    const nombre = (error as { name?: string })?.name;
+    const seAgotoElTiempo =
+      nombre === "TimeoutError" || nombre === "AbortError";
+
     console.error("[proxy] Error al reenviar a", destino, error);
+
     return new Response(
       JSON.stringify({
-        error: "No se pudo conectar con el servidor",
-        mensaje: "Verifica que el backend este corriendo en el puerto 8080.",
+        error: seAgotoElTiempo
+          ? "El servidor está iniciando"
+          : "No se pudo conectar con el servidor",
+        mensaje:
+          "El servicio gratuito se suspende cuando no se usa. Esperá unos segundos y volvé a intentar.",
+        reintentar: true,
       }),
-      { status: 502, headers: { "Content-Type": "application/json" } },
+      {
+        status: seAgotoElTiempo ? 504 : 503,
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 }

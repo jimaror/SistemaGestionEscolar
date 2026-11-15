@@ -290,14 +290,30 @@ export async function eliminarReunion(id: number): Promise<void> {
  * Traduce errores de axios/red a mensajes claros para el usuario.
  */
 export function mensajeDeError(error: unknown): string {
-  const respuesta = (error as { response?: { status?: number } })?.response;
+  const respuesta = (
+    error as {
+      response?: { status?: number; data?: { mensaje?: string } };
+    }
+  )?.response;
   const status = respuesta?.status;
 
   if (status === 401) return "Tu sesión expiró. Volvé a iniciar sesión.";
   if (status === 403) return "No tenés permisos para ver esta información.";
   if (status === 404) return "No se encontró la información solicitada.";
-  if (status && status >= 500) return "El servidor tuvo un problema. Intentá de nuevo.";
-  return "No se pudo conectar con el servidor. Verificá que el backend esté corriendo.";
+
+  // 502/503/504: el servicio gratuito esta arrancando.
+  if (status === 502 || status === 503 || status === 504) {
+    return (
+      respuesta?.data?.mensaje ??
+      "El servidor está iniciando. Esperá unos segundos y volvé a intentar."
+    );
+  }
+
+  if (status && status >= 500) {
+    return "El servidor tuvo un problema. Intentá de nuevo.";
+  }
+
+  return "No pudimos conectar con el servidor. Revisá tu conexión y volvé a intentar.";
 }
 
 export function indexarPor<T extends { id: number }>(items: T[]) {

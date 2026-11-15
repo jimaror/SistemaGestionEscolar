@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, guardarSesion } from "@/lib/api";
+import {
+  despertarBackend,
+  esFallaDeArranque,
+  guardarSesion,
+  login,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +48,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verPassword, setVerPassword] = useState(false);
+  const [despertando, setDespertando] = useState(true);
+  const [intentoArranque, setIntentoArranque] = useState(0);
   const router = useRouter();
+
+  // Apenas se abre la pantalla, empezamos a despertar el backend en
+  // segundo plano. Asi, cuando la persona termina de escribir, el
+  // servidor ya esta iniciando o listo.
+  useEffect(() => {
+    let activo = true;
+    despertarBackend((intento) => {
+      if (activo) setIntentoArranque(intento);
+    })
+      .then(() => {
+        if (activo) setDespertando(false);
+      })
+      .catch(() => {
+        if (activo) setDespertando(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +77,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await login({ username: username.trim(), password });
+      const listo = await despertarBackend((intento) =>
+        setIntentoArranque(intento)
+      );
+      setDespertando(false);
+
+      if (!listo) {
+        setError(
+          "El servidor está tardando en iniciar. Esperá unos segundos y volvé a intentar."
+        );
+        return;
+      }
+
+      let data;
+      try {
+        data = await login({ username: username.trim(), password });
+      } catch (err) {
+        // Si el backend se durmio justo antes del ingreso, se reintenta
+        // una vez tras unos segundos.
+        if (!esFallaDeArranque(err)) throw err;
+        await new Promise((resolver) => setTimeout(resolver, 4000));
+        data = await login({ username: username.trim(), password });
+      }
+
       guardarSesion(data);
       router.push("/dashboard");
     } catch (err: unknown) {
@@ -65,7 +113,7 @@ export default function LoginPage() {
         setError("Revisá los datos ingresados.");
       } else {
         setError(
-          "No se pudo conectar con el servidor. Verificá que el backend esté corriendo."
+          "El servidor está iniciando. Esperá unos segundos y volvé a intentar."
         );
       }
     } finally {
@@ -163,6 +211,19 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {!error && despertando && (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                  <LoaderIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    Iniciando el servidor… La primera vez puede tardar hasta un
+                    minuto.
+                    {intentoArranque > 1
+                      ? ` Reintentando (${intentoArranque}/2).`
+                      : ""}
+                  </span>
+                </div>
+              )}
+
               {error && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                   {error}
@@ -179,7 +240,7 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <LoaderIcon className="h-5 w-5" />
-                    Ingresando...
+                    {despertando ? "Iniciando servidor…" : "Ingresando..."}
                   </>
                 ) : (
                   <>
