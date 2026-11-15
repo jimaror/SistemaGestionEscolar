@@ -44,6 +44,7 @@ import {
   BookIcon,
   ClipboardIcon,
   EditIcon,
+  FileTextIcon,
   PlusIcon,
   RefreshIcon,
   SearchIcon,
@@ -367,6 +368,14 @@ export default function NotasPage() {
       }
       acciones={
         <>
+          <Button
+            variant="outline"
+            onClick={() => window.print()}
+            className="hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+          >
+            <FileTextIcon className="h-4 w-4" />
+            Imprimir Boleta / PDF
+          </Button>
           <Button variant="outline" onClick={() => void cargar()} disabled={cargando}>
             <RefreshIcon className="h-4 w-4" />
             Actualizar

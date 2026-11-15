@@ -93,6 +93,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [rol, setRol] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notas, setNotas] = useState<Nota[]>([]);
@@ -116,7 +117,9 @@ export default function DashboardPage() {
 
   const cargar = useCallback(async () => {
     const rolActual = localStorage.getItem("rol") ?? "";
+    const usuarioActual = localStorage.getItem("username") ?? "";
     setRol(rolActual);
+    setUsuario(usuarioActual);
     setCargando(true);
     setError(null);
     try {
@@ -299,6 +302,63 @@ export default function DashboardPage() {
         },
   ];
 
+  const accesosRapidos = [
+    {
+      titulo: "Boleta de Notas",
+      subtitulo: "Calificaciones oficiales",
+      icon: BookIcon,
+      href: "/notas",
+      color: "from-blue-600 to-indigo-600",
+      borde: "hover:border-indigo-300",
+      tag: "Cortes I - IV",
+    },
+    {
+      titulo: "Mis Asistencias",
+      subtitulo: "Puntualidad y registro",
+      icon: ClipboardIcon,
+      href: "/asistencias",
+      color: "from-emerald-500 to-teal-600",
+      borde: "hover:border-emerald-300",
+      tag: "Calendario",
+    },
+    {
+      titulo: "Tareas",
+      subtitulo: "Entregas activas",
+      icon: CheckIcon,
+      href: "/tareas",
+      color: "from-amber-500 to-orange-600",
+      borde: "hover:border-amber-300",
+      tag: "Entregas",
+    },
+    {
+      titulo: "Horarios",
+      subtitulo: "Salones y días",
+      icon: ClockIcon,
+      href: "/grados",
+      color: "from-sky-500 to-blue-600",
+      borde: "hover:border-sky-300",
+      tag: "Semanal",
+    },
+    {
+      titulo: "Materiales",
+      subtitulo: "Guías y lecturas",
+      icon: TrendingUpIcon,
+      href: "/materiales",
+      color: "from-purple-500 to-fuchsia-600",
+      borde: "hover:border-purple-300",
+      tag: "Descargas",
+    },
+    {
+      titulo: "Mensajes",
+      subtitulo: "Avisos escolares",
+      icon: MessageIcon,
+      href: "/mensajes",
+      color: "from-rose-500 to-pink-600",
+      borde: "hover:border-rose-300",
+      tag: "Directo",
+    },
+  ];
+
   return (
     <AppShell titulo="Mi escritorio" subtitulo="Resumen general de la institución">
       <div className="space-y-6">
@@ -309,19 +369,27 @@ export default function DashboardPage() {
 
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20">
-                <SparklesIcon className="h-3.5 w-3.5" />
-                Colegio Otto de la Rocha
-              </span>
-              <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
-                ¡Bienvenido de nuevo! 👋
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur-sm">
+                  <SparklesIcon className="h-3.5 w-3.5" />
+                  Colegio Otto de la Rocha
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/30 backdrop-blur-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-dot" />
+                  Periodo Lectivo Activo 2026
+                </span>
+              </div>
+
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-4xl">
+                ¡Hola de nuevo{usuario ? `, ${usuario}` : ""}! 👋
               </h2>
-              <p className="mt-2 max-w-xl text-sm text-indigo-100 sm:text-base">
-                Este es tu resumen del día. Consultá tus clases, tareas,
-                calificaciones, mensajes y novedades del colegio desde un solo lugar.
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-indigo-100 sm:text-base">
+                {rol === "Alumno"
+                  ? "Este es tu centro escolar. Consulta tus clases de hoy, entregas de tareas, boleta de notas y anuncios oficiales en un solo lugar."
+                  : "Panel de control general de la institución: seguimiento académico, asistencia en tiempo real, registro de notas y novedades."}
               </p>
-              <p className="mt-4 text-xs font-medium capitalize text-white/80 sm:text-sm">
-                {fecha}
+              <p className="mt-4 text-xs font-semibold capitalize text-white/90 sm:text-sm">
+                📅 {fecha}
               </p>
             </div>
 
@@ -380,34 +448,84 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Métricas clicables */}
+        {/* Métricas destacadas con animaciones */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {metricas.map((m) => (
+          {metricas.map((m, idx) => (
             <button
               key={m.titulo}
               type="button"
               onClick={() => router.push(m.href)}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
+              className={`card-hover group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 stagger-${idx + 1}`}
             >
               <div className="flex items-start justify-between">
                 <span
-                  className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${m.color} text-white shadow-md`}
+                  className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${m.color} text-white shadow-md shadow-slate-900/10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2`}
                 >
-                  <m.icon className="h-5 w-5" />
+                  <m.icon className="h-6 w-6" />
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-blue-200">
-                  <SparklesIcon className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50/90 px-2.5 py-1 text-[11px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-200/70">
+                  <SparklesIcon className="h-3 w-3 text-indigo-500" />
                   {cargando ? "…" : m.nota}
                 </span>
               </div>
-              <p className="mt-4 text-2xl font-bold text-slate-900">{m.valor}</p>
-              <p className="text-sm font-semibold text-slate-700">{m.titulo}</p>
-              <p className="text-xs text-slate-500">{m.detalle}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 opacity-0 transition group-hover:opacity-100">
-                Ver detalle <ArrowRightIcon className="h-3.5 w-3.5" />
-              </span>
+              <p className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">
+                {m.valor}
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-slate-700">{m.titulo}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{m.detalle}</p>
+              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                <span className="text-[11px] font-semibold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                  Acceso rápido
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 transition-transform duration-200 group-hover:translate-x-1">
+                  Ver detalle <ArrowRightIcon className="h-3.5 w-3.5" />
+                </span>
+              </div>
             </button>
           ))}
+        </section>
+
+        {/* Accesos rápidos interactivos estilo AulaCore / Maria Paz */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                ¿Qué deseas consultar hoy?
+              </h3>
+              <p className="text-xs text-slate-500">
+                Accesos directos con un solo clic a las secciones clave
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {accesosRapidos.map((acc) => (
+              <button
+                key={acc.titulo}
+                type="button"
+                onClick={() => router.push(acc.href)}
+                className={`card-hover group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-3.5 text-left shadow-sm transition-all duration-200 ${acc.borde}`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${acc.color} text-white shadow-sm transition-transform duration-200 group-hover:scale-110`}
+                  >
+                    <acc.icon className="h-4 w-4" />
+                  </span>
+                  <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+                    {acc.tag}
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    {acc.titulo}
+                  </p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    {acc.subtitulo}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
         </section>
 
         {/* Grilla principal */}
@@ -427,7 +545,7 @@ export default function DashboardPage() {
               {proximasClases.map((clase) => (
                 <div
                   key={`${clase.materia}-${clase.hora}`}
-                  className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3"
+                  className="card-interactive flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3"
                 >
                   <span
                     className={`inline-flex h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${clase.color}`}
@@ -443,6 +561,14 @@ export default function DashboardPage() {
                   <Badge variant="info">{clase.aula}</Badge>
                 </div>
               ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/grados")}
+                className="w-full mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/60"
+              >
+                Ver horario escolar completo →
+              </Button>
             </CardContent>
           </Card>
 
@@ -461,7 +587,7 @@ export default function DashboardPage() {
               {tareas.map((tarea) => (
                 <div
                   key={tarea.titulo}
-                  className="rounded-xl border border-slate-100 p-3 transition hover:border-slate-200 hover:bg-slate-50/60"
+                  className="card-interactive rounded-xl border border-slate-100 bg-white p-3 shadow-xs"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">
@@ -484,6 +610,14 @@ export default function DashboardPage() {
                   </p>
                 </div>
               ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/tareas")}
+                className="w-full mt-2 text-xs font-semibold text-fuchsia-600 hover:text-fuchsia-700 hover:bg-fuchsia-50/60"
+              >
+                Ir al panel de tareas →
+              </Button>
             </CardContent>
           </Card>
 
@@ -511,19 +645,19 @@ export default function DashboardPage() {
                 progresoAsignaturas.map((asignatura) => (
                   <div key={asignatura.materia}>
                     <div className="mb-1.5 flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-700">
+                      <span className="font-semibold text-slate-800">
                         {asignatura.materia}
-                        <span className="ml-1 text-slate-400">
-                          ({asignatura.cantidad})
+                        <span className="ml-1 text-slate-400 font-normal">
+                          ({asignatura.cantidad} {asignatura.cantidad === 1 ? "nota" : "notas"})
                         </span>
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-bold text-slate-900">
                         {asignatura.porcentaje}%
                       </span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/50">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${asignatura.color}`}
+                        className={`h-full rounded-full bg-gradient-to-r progress-bar-fill ${asignatura.color}`}
                         style={{ width: `${asignatura.porcentaje}%` }}
                       />
                     </div>
@@ -611,6 +745,14 @@ export default function DashboardPage() {
                   </div>
                 ))
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/notas")}
+                className="w-full mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/60"
+              >
+                Abrir boleta de calificaciones →
+              </Button>
             </CardContent>
           </Card>
 
