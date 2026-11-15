@@ -1,12 +1,16 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "default" | "outline" | "ghost" | "gradient" | "destructive";
+type Variant = "default" | "secondary" | "glass" | "outline" | "ghost" | "gradient" | "destructive";
 type Size = "default" | "sm" | "lg" | "icon";
 
 const variants: Record<Variant, string> = {
   default:
     "bg-slate-900 text-white shadow-sm hover:bg-slate-800 focus-visible:ring-slate-900/40",
+  secondary:
+    "bg-white text-slate-900 shadow-md hover:bg-slate-100 focus-visible:ring-slate-300 font-semibold",
+  glass:
+    "border border-white/25 bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm",
   outline:
     "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50 focus-visible:ring-slate-400/40",
   ghost:

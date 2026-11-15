@@ -393,21 +393,21 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-wrap gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2.5">
               <Button
-                variant="outline"
-                className="border-white/30 bg-white/15 text-white hover:bg-white/25"
+                variant="glass"
                 onClick={() => router.push("/notas")}
+                className="font-semibold"
               >
                 <BookIcon className="h-4 w-4" />
                 Ver notas
               </Button>
               <Button
-                variant="default"
-                className="bg-white text-indigo-700 hover:bg-white/90"
+                variant="secondary"
+                className="bg-white text-indigo-950 font-bold shadow-lg shadow-black/25 hover:bg-slate-50"
                 onClick={() => router.push("/asistencias")}
               >
-                <ClipboardIcon className="h-4 w-4" />
+                <ClipboardIcon className="h-4 w-4 text-indigo-950" />
                 Asistencia
               </Button>
             </div>
