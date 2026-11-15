@@ -19,6 +19,27 @@ export interface Alumno {
   estado: string | null;
 }
 
+// Vínculo entre un alumno y su tutor (padre/madre/encargado).
+export interface TutorResumen {
+  id: number;
+  ocupacion: string | null;
+  lugarTrabajo: string | null;
+  telefonoTrabajo: string | null;
+  correoPersonal: string | null;
+  horarioAtencion: string | null;
+  direccionTrabajo: string | null;
+  usuario?: Usuario | null;
+}
+
+export interface AlumnoTutor {
+  id: number;
+  alumnoId: number;
+  tutorId: number;
+  parentesco: string;
+  esPrincipal: boolean;
+  tutor?: TutorResumen | null;
+}
+
 export interface Nota {
   id: number;
   calificacion: number;

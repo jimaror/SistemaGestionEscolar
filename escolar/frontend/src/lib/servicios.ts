@@ -3,6 +3,7 @@ import type {
   Alumno,
   AlumnoActualizarRequest,
   AlumnoCrearRequest,
+  AlumnoTutor,
   AnioEscolar,
   AsignacionDocente,
   Asignatura,
@@ -43,6 +44,7 @@ async function obtener<T>(ruta: string): Promise<T> {
 
 // Catálogos y listados permitidos por el backend según el rol autenticado.
 export const listarAlumnos = () => obtener<Alumno[]>("/alumnos");
+export const listarAlumnoTutores = () => obtener<AlumnoTutor[]>("/alumno-tutores");
 export const listarNotas = () => obtener<Nota[]>("/notas");
 export const listarEvaluaciones = () => obtener<Evaluacion[]>("/evaluaciones");
 export const listarMatriculas = () => obtener<Matricula[]>("/matriculas");
