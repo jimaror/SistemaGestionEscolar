@@ -34,21 +34,29 @@ body {
 
 .wave-1 {
   fill: url(#gradientWave1);
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 1.5;
   animation: waveMove 10s ease-in-out infinite;
 }
 
 .wave-2 {
   fill: url(#gradientWave2);
+  stroke: rgba(125, 211, 252, 0.34);
+  stroke-width: 1.5;
   animation: waveMove 13s ease-in-out infinite reverse;
 }
 
 .wave-3 {
   fill: url(#gradientWave3);
+  stroke: rgba(186, 230, 253, 0.44);
+  stroke-width: 1.5;
   animation: waveMove 16s ease-in-out infinite;
 }
 
 .wave-4 {
   fill: url(#gradientWave4);
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1.5;
   animation: waveMove 19s ease-in-out infinite reverse;
 }
 
@@ -74,25 +82,25 @@ body {
   z-index: 2;
 }
 
-/* Variante: olas blancas difuminadas dentro de la barra lateral */
+/* Variante: olas dentro de la barra lateral azul oscuro */
 .waves-container.waves-sidebar {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   width: 100%;
-  height: 130px;
+  height: 140px;
   z-index: 0;
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .waves-container.waves-sidebar svg {
-  filter: blur(3px);
+  filter: blur(0.6px);
 }
 
 .waves-container.waves-sidebar .sombra-base {
-  height: 130px;
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.06));
+  height: 140px;
+  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.22));
 }
 @keyframes gradient-shift {
   0%,
