@@ -17,30 +17,9 @@ import {
   LockIcon,
   EyeIcon,
   EyeOffIcon,
-  ShieldIcon,
-  SparklesIcon,
-  CheckIcon,
   ArrowRightIcon,
   LoaderIcon,
 } from "@/components/icons";
-
-const VENTAJAS = [
-  {
-    icon: ShieldIcon,
-    titulo: "Acceso seguro",
-    texto: "Autenticación con roles y permisos por usuario.",
-  },
-  {
-    icon: SparklesIcon,
-    titulo: "Todo en un panel",
-    texto: "Información clara y actualizada en tiempo real.",
-  },
-  {
-    icon: CheckIcon,
-    titulo: "Simple y rápido",
-    texto: "Diseñado para que gestionar el colegio sea fácil.",
-  },
-];
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -257,23 +236,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Ventajas (escritorio) */}
-        <div className="mt-8 hidden w-full grid-cols-3 gap-3 sm:grid">
-          {VENTAJAS.map((item) => (
-            <div
-              key={item.titulo}
-              className="rounded-2xl border border-white/15 bg-white/10 p-3 text-center backdrop-blur-xl"
-            >
-              <item.icon className="mx-auto h-5 w-5 text-fuchsia-200" />
-              <p className="mt-1.5 text-xs font-semibold text-white">
-                {item.titulo}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-purple-100/80">
-                {item.texto}
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* Ventajas (escritorio) eliminadas para un aspecto más profesional */}
 
         <p className="mt-8 text-center text-xs font-medium text-purple-200/70">
           © {new Date().getFullYear()} Colegio Otto de la Rocha · Acceso

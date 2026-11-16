@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscudoNicaragua } from "@/components/escudo";
 import { cn } from "@/lib/utils";
+import { WavesBackground } from "@/components/waves-background";
 import {
   ArrowRightIcon,
   BellIcon,
@@ -230,13 +231,16 @@ export function AppShell({
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 relative z-10">
       {/* Fondo decorativo */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-indigo-300/30 blur-3xl" />
         <div className="absolute top-1/3 -right-40 h-[28rem] w-[28rem] rounded-full bg-fuchsia-300/20 blur-3xl" />
         <div className="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full bg-sky-300/20 blur-3xl" />
       </div>
+
+      {/* Olas azul marino */}
+      <WavesBackground />
 
       {/* Overlay móvil */}
       {sidebarAbierto && (
@@ -424,12 +428,14 @@ export function AppShell({
         </header>
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          {acciones && (
-            <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
-              {acciones}
-            </div>
-          )}
-          {children}
+          <div className="mx-auto w-full max-w-6xl">
+            {acciones && (
+              <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+                {acciones}
+              </div>
+            )}
+            {children}
+          </div>
         </main>
 
         <footer className="border-t border-slate-200 bg-white/60 px-4 py-4 text-center text-xs text-slate-500 sm:px-6">
