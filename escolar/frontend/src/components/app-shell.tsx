@@ -392,7 +392,10 @@ export function AppShell({
               )}
             </div>
 
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="hidden items-center gap-3 sm:flex">
+              <span className="text-sm font-semibold text-slate-900">
+                {sesion.username}
+              </span>
               <button
                 type="button"
                 className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"
