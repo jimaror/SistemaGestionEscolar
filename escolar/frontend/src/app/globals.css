@@ -34,29 +34,21 @@ body {
 
 .wave-1 {
   fill: url(#gradientWave1);
-  stroke: rgba(255, 255, 255, 0.24);
-  stroke-width: 1.5;
   animation: waveMove 10s ease-in-out infinite;
 }
 
 .wave-2 {
   fill: url(#gradientWave2);
-  stroke: rgba(125, 211, 252, 0.34);
-  stroke-width: 1.5;
   animation: waveMove 13s ease-in-out infinite reverse;
 }
 
 .wave-3 {
   fill: url(#gradientWave3);
-  stroke: rgba(186, 230, 253, 0.44);
-  stroke-width: 1.5;
   animation: waveMove 16s ease-in-out infinite;
 }
 
 .wave-4 {
   fill: url(#gradientWave4);
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 1.5;
   animation: waveMove 19s ease-in-out infinite reverse;
 }
 
@@ -95,12 +87,12 @@ body {
 }
 
 .waves-container.waves-sidebar svg {
-  filter: blur(0.6px);
+  filter: none;
 }
 
 .waves-container.waves-sidebar .sombra-base {
-  height: 140px;
-  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.22));
+  height: 80px;
+  background: linear-gradient(180deg, transparent, rgba(13, 27, 72, 0.12));
 }
 @keyframes gradient-shift {
   0%,
