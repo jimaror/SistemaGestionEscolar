@@ -9,34 +9,26 @@ export function WavesBackground({ className }: { className?: string }) {
       <svg viewBox="0 0 1200 320" preserveAspectRatio="none">
         <defs>
           <linearGradient id="gradientWave1" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#001233" stopOpacity={1} />
-            <stop offset="25%" stopColor="#002466" stopOpacity={0.95} />
-            <stop offset="50%" stopColor="#003999" stopOpacity={0.85} />
-            <stop offset="75%" stopColor="#0052cc" stopOpacity={0.6} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.3} />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity={0.16} />
             <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
           </linearGradient>
 
           <linearGradient id="gradientWave2" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#001a4d" stopOpacity={0.95} />
-            <stop offset="25%" stopColor="#002d7d" stopOpacity={0.9} />
-            <stop offset="50%" stopColor="#0047b3" stopOpacity={0.75} />
-            <stop offset="75%" stopColor="#3377ff" stopOpacity={0.45} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.24} />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity={0.12} />
             <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
           </linearGradient>
 
           <linearGradient id="gradientWave3" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#002d7d" stopOpacity={0.85} />
-            <stop offset="25%" stopColor="#0047b3" stopOpacity={0.75} />
-            <stop offset="50%" stopColor="#1a66cc" stopOpacity={0.6} />
-            <stop offset="75%" stopColor="#6699ff" stopOpacity={0.35} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.18} />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity={0.09} />
             <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
           </linearGradient>
 
           <linearGradient id="gradientWave4" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#0047b3" stopOpacity={0.7} />
-            <stop offset="25%" stopColor="#1a66cc" stopOpacity={0.6} />
-            <stop offset="50%" stopColor="#4080ff" stopOpacity={0.45} />
-            <stop offset="75%" stopColor="#99bbff" stopOpacity={0.2} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.12} />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity={0.06} />
             <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
           </linearGradient>
         </defs>

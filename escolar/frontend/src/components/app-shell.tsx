@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cerrarSesion, obtenerToken } from "@/lib/api";
+import { cargarNombreUsuario, cerrarSesion, obtenerToken } from "@/lib/api";
 import { PERMISOS } from "@/lib/permisos";
 import { Button } from "@/components/ui/button";
 import { EscudoNicaragua } from "@/components/escudo";
@@ -154,6 +154,7 @@ export function AppShell({
   const router = useRouter();
   const pathname = usePathname();
   const [sesion, setSesion] = useState<Sesion | null>(null);
+  const [nombreUsuario, setNombreUsuario] = useState("");
   const [autorizado, setAutorizado] = useState(false);
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
   const [colapsado, setColapsado] = useState(false);
@@ -167,6 +168,14 @@ export function AppShell({
       username: localStorage.getItem("username") ?? "Usuario",
       rol: localStorage.getItem("rol") ?? "Sin rol",
     });
+    const nombreGuardado = localStorage.getItem("nombreUsuario");
+    if (nombreGuardado) {
+      setNombreUsuario(nombreGuardado);
+    } else {
+      cargarNombreUsuario().then((nombre) => {
+        if (nombre) setNombreUsuario(nombre);
+      });
+    }
     setAutorizado(true);
   }, [router]);
 
@@ -329,7 +338,7 @@ export function AppShell({
           ))}
         </nav>
 
-        <div className="relative z-10 border-t border-white/10 p-3 pb-28">
+        <div className="relative z-10 border-t border-white/10 p-3 pb-20">
           <button
             type="button"
             onClick={salir}
@@ -387,6 +396,11 @@ export function AppShell({
             </div>
 
             <div className="hidden items-center gap-3 sm:flex">
+              {nombreUsuario && (
+                <span className="max-w-[17rem] truncate bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-600 bg-clip-text text-sm font-semibold leading-tight tracking-tight text-transparent">
+                  {nombreUsuario}
+                </span>
+              )}
               <button
                 type="button"
                 className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"

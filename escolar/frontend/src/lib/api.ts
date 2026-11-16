@@ -131,6 +131,43 @@ export interface LoginResponse {
   expiraEn: number;
 }
 
+export interface UsuarioActual {
+  id: number;
+  username: string;
+  email: string | null;
+  rol: string;
+  nombres: string | null;
+  apellidos: string | null;
+  estado: string;
+}
+
+/**
+ * Trae el nombre completo del usuario autenticado y lo deja guardado
+ * para mostrarlo en la barra superior. Si el servidor está arrancando,
+ * devuelve null sin romper la sesión.
+ */
+export async function cargarNombreUsuario(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  if (!localStorage.getItem("token")) return null;
+  try {
+    const { data } = await api.get<UsuarioActual>("/auth/yo", {
+      timeout: 8000,
+    });
+    const nombre = [data.nombres, data.apellidos]
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (nombre) {
+      localStorage.setItem("nombreUsuario", nombre);
+      return nombre;
+    }
+  } catch {
+    // Sin conexión o servidor iniciando: se reintenta en la próxima carga.
+  }
+  return null;
+}
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>("/auth/login", payload);
   return data;
@@ -142,6 +179,7 @@ export function guardarSesion(data: LoginResponse) {
   localStorage.setItem("rol", data.rol);
   localStorage.setItem("username", data.username);
   localStorage.setItem("usuarioId", String(data.id));
+  localStorage.removeItem("nombreUsuario");
 }
 
 export function cerrarSesion() {
@@ -150,6 +188,7 @@ export function cerrarSesion() {
   localStorage.removeItem("rol");
   localStorage.removeItem("username");
   localStorage.removeItem("usuarioId");
+  localStorage.removeItem("nombreUsuario");
 }
 
 export function obtenerToken(): string | null {

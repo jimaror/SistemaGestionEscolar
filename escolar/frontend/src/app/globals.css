@@ -74,7 +74,7 @@ body {
   z-index: 2;
 }
 
-/* Variante: olas dentro de la barra lateral azul oscuro */
+/* Variante: olas blancas difuminadas dentro de la barra lateral */
 .waves-container.waves-sidebar {
   position: absolute;
   left: 0;
@@ -83,12 +83,16 @@ body {
   width: 100%;
   height: 130px;
   z-index: 0;
-  opacity: 0.55;
+  opacity: 0.9;
+}
+
+.waves-container.waves-sidebar svg {
+  filter: blur(3px);
 }
 
 .waves-container.waves-sidebar .sombra-base {
   height: 130px;
-  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.45));
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.06));
 }
 @keyframes gradient-shift {
   0%,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  cargarNombreUsuario,
   despertarBackend,
   esFallaDeArranque,
   guardarSesion,
@@ -80,6 +81,7 @@ export default function LoginPage() {
       }
 
       guardarSesion(data);
+      await cargarNombreUsuario();
       router.push("/dashboard");
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response
