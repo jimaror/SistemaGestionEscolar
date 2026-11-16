@@ -242,6 +242,17 @@ export function AppShell({
       {/* Olas azul marino */}
       <WavesBackground />
 
+      {/* Botón flotante de cerrar sesión (arriba de las olas, con blur blanco) */}
+      <button
+        type="button"
+        onClick={salir}
+        className="fixed bottom-6 right-6 z-20 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-lg backdrop-blur-md transition hover:bg-white/90 hover:shadow-xl"
+        title="Cerrar sesión"
+      >
+        <LogOutIcon className="h-4 w-4" />
+        Cerrar sesión
+      </button>
+
       {/* Overlay móvil */}
       {sidebarAbierto && (
         <button
