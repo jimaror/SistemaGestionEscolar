@@ -425,18 +425,9 @@ export function AppShell({
             </div>
 
             <div className="flex items-center gap-3 border-l border-slate-200 pl-3">
-              <div className="hidden text-right sm:block">
-                <p className="text-sm font-semibold leading-tight text-slate-900">
-                  {primerNombre(sesion.username)}
-                </p>
-                <p className="text-[11px] text-slate-500">{sesion.rol}</p>
-              </div>
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-md">
                 <UserCircleIcon className="h-6 w-6" />
               </div>
-              <Badge variant="brand" className="hidden md:inline-flex">
-                {sesion.rol}
-              </Badge>
             </div>
           </div>
         </header>
