@@ -254,12 +254,22 @@ export function AppShell({
 
       {/* Sidebar */}
       <aside
+        style={{
+          backgroundImage:
+            "linear-gradient(180deg, #020617 0%, #0a1330 42%, #0e2350 74%, #0b2a5e 100%)",
+        }}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-slate-300 shadow-2xl transition-all duration-300",
+          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-white/10 text-slate-300 shadow-2xl transition-all duration-300",
           colapsado ? "lg:w-[5.5rem]" : "lg:w-72",
           sidebarAbierto ? "w-72 translate-x-0" : "w-72 -translate-x-full lg:translate-x-0"
         )}
       >
+        {/* Azul difuminado que baja hasta las olas */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(120%_100%_at_50%_120%,rgba(37,99,235,0.35)_0%,rgba(37,99,235,0.14)_45%,rgba(37,99,235,0)_75%)]"
+        />
+
         <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4">
           <button
             type="button"
@@ -343,8 +353,8 @@ export function AppShell({
             type="button"
             onClick={salir}
             className={cn(
-              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-red-500/15 hover:text-red-200",
-              colapsado && "justify-center px-0"
+              "flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium tracking-wide text-slate-200 transition hover:bg-red-500/15 hover:text-red-200",
+              colapsado && "px-0"
             )}
             title="Cerrar sesión"
           >
