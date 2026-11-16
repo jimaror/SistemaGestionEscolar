@@ -34,21 +34,29 @@ body {
 
 .wave-1 {
   fill: url(#gradientWave1);
+  stroke: rgba(255, 255, 255, 0.34);
+  stroke-width: 2;
   animation: waveMove 10s ease-in-out infinite;
 }
 
 .wave-2 {
   fill: url(#gradientWave2);
+  stroke: rgba(186, 230, 253, 0.3);
+  stroke-width: 2;
   animation: waveMove 13s ease-in-out infinite reverse;
 }
 
 .wave-3 {
   fill: url(#gradientWave3);
+  stroke: rgba(125, 211, 252, 0.26);
+  stroke-width: 2;
   animation: waveMove 16s ease-in-out infinite;
 }
 
 .wave-4 {
   fill: url(#gradientWave4);
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 2;
   animation: waveMove 19s ease-in-out infinite reverse;
 }
 

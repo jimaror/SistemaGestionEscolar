@@ -9,35 +9,35 @@ export function WavesBackground({ className }: { className?: string }) {
       <svg viewBox="0 0 1200 320" preserveAspectRatio="none">
         <defs>
           <linearGradient id="gradientWave1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity={1} />
-            <stop offset="25%" stopColor="#e6f0ff" stopOpacity={1} />
-            <stop offset="50%" stopColor="#003999" stopOpacity={0.85} />
-            <stop offset="75%" stopColor="#002466" stopOpacity={0.95} />
-            <stop offset="100%" stopColor="#001233" stopOpacity={1} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.92} />
+            <stop offset="8%" stopColor="#e0f2fe" stopOpacity={0.85} />
+            <stop offset="30%" stopColor="#1e40af" stopOpacity={0.9} />
+            <stop offset="65%" stopColor="#0b2a5e" stopOpacity={1} />
+            <stop offset="100%" stopColor="#020617" stopOpacity={1} />
           </linearGradient>
 
           <linearGradient id="gradientWave2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity={1} />
-            <stop offset="25%" stopColor="#f0f7ff" stopOpacity={1} />
-            <stop offset="50%" stopColor="#0047b3" stopOpacity={0.75} />
-            <stop offset="75%" stopColor="#002d7d" stopOpacity={0.9} />
-            <stop offset="100%" stopColor="#001a4d" stopOpacity={0.95} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.86} />
+            <stop offset="8%" stopColor="#bae6fd" stopOpacity={0.8} />
+            <stop offset="30%" stopColor="#1d4ed8" stopOpacity={0.9} />
+            <stop offset="65%" stopColor="#0a2456" stopOpacity={1} />
+            <stop offset="100%" stopColor="#020617" stopOpacity={1} />
           </linearGradient>
 
           <linearGradient id="gradientWave3" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.95} />
-            <stop offset="25%" stopColor="#f7faff" stopOpacity={0.95} />
-            <stop offset="50%" stopColor="#1a66cc" stopOpacity={0.6} />
-            <stop offset="75%" stopColor="#0047b3" stopOpacity={0.75} />
-            <stop offset="100%" stopColor="#002d7d" stopOpacity={0.85} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.8} />
+            <stop offset="8%" stopColor="#7dd3fc" stopOpacity={0.78} />
+            <stop offset="30%" stopColor="#2563eb" stopOpacity={0.9} />
+            <stop offset="65%" stopColor="#082048" stopOpacity={1} />
+            <stop offset="100%" stopColor="#020617" stopOpacity={1} />
           </linearGradient>
 
           <linearGradient id="gradientWave4" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.9} />
-            <stop offset="25%" stopColor="#e6f0ff" stopOpacity={0.9} />
-            <stop offset="50%" stopColor="#4080ff" stopOpacity={0.45} />
-            <stop offset="75%" stopColor="#1a66cc" stopOpacity={0.6} />
-            <stop offset="100%" stopColor="#0047b3" stopOpacity={0.7} />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.72} />
+            <stop offset="8%" stopColor="#bae6fd" stopOpacity={0.7} />
+            <stop offset="30%" stopColor="#1d4ed8" stopOpacity={0.9} />
+            <stop offset="65%" stopColor="#071d42" stopOpacity={1} />
+            <stop offset="100%" stopColor="#020617" stopOpacity={1} />
           </linearGradient>
         </defs>
 
