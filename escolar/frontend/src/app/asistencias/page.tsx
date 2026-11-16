@@ -43,11 +43,13 @@ import {
   AlertIcon,
   CalendarIcon,
   CheckIcon,
+  CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardIcon,
   ClockIcon,
   EditIcon,
+  FileTextIcon,
   PlusIcon,
   RefreshIcon,
   SearchIcon,
@@ -503,17 +505,17 @@ export default function AsistenciasPage() {
 
             {/* Leyenda Semáforo */}
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
-              <span className="inline-flex items-center gap-1.5 text-slate-700">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-xs" /> Presente
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                <CheckCircleIcon className="h-3.5 w-3.5" /> Presente
               </span>
-              <span className="inline-flex items-center gap-1.5 text-slate-700">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-xs" /> Tardanza
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">
+                <ClockIcon className="h-3.5 w-3.5" /> Tardanza
               </span>
-              <span className="inline-flex items-center gap-1.5 text-slate-700">
-                <span className="h-2.5 w-2.5 rounded-full bg-sky-500 shadow-xs" /> Justificada
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-sky-700">
+                <FileTextIcon className="h-3.5 w-3.5" /> Justificada
               </span>
-              <span className="inline-flex items-center gap-1.5 text-slate-700">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-xs" /> Ausente
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-red-700">
+                <AlertIcon className="h-3.5 w-3.5" /> Ausente
               </span>
             </div>
           </div>
