@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cerrarSesion, obtenerToken } from "@/lib/api";
 import { PERMISOS } from "@/lib/permisos";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscudoNicaragua } from "@/components/escudo";
 import { cn } from "@/lib/utils";
@@ -141,11 +140,6 @@ const GRUPOS_NAV: NavGroup[] = [
 
 const NAV: NavItem[] = GRUPOS_NAV.flatMap((grupo) => grupo.items);
 
-function primerNombre(username: string) {
-  const base = username.split(/[._\s-]/)[0] ?? username;
-  return base.charAt(0).toUpperCase() + base.slice(1);
-}
-
 export function AppShell({
   children,
   titulo,
@@ -239,20 +233,6 @@ export function AppShell({
         <div className="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full bg-sky-300/20 blur-3xl" />
       </div>
 
-      {/* Olas azul marino */}
-      <WavesBackground />
-
-      {/* Botón flotante de cerrar sesión (arriba de las olas, con blur blanco) */}
-      <button
-        type="button"
-        onClick={salir}
-        className="fixed bottom-6 right-6 z-20 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-lg backdrop-blur-md transition hover:bg-white/90 hover:shadow-xl"
-        title="Cerrar sesión"
-      >
-        <LogOutIcon className="h-4 w-4" />
-        Cerrar sesión
-      </button>
-
       {/* Overlay móvil */}
       {sidebarAbierto && (
         <button
@@ -266,7 +246,7 @@ export function AppShell({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-slate-300 shadow-2xl transition-all duration-300",
+          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-slate-300 shadow-2xl transition-all duration-300",
           colapsado ? "lg:w-[5.5rem]" : "lg:w-72",
           sidebarAbierto ? "w-72 translate-x-0" : "w-72 -translate-x-full lg:translate-x-0"
         )}
@@ -301,7 +281,7 @@ export function AppShell({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+        <nav className="relative z-10 flex-1 space-y-5 overflow-y-auto px-3 py-4">
           {menu.map((grupo) => (
             <div key={grupo.titulo} className="space-y-1">
               {!colapsado && (
@@ -349,7 +329,7 @@ export function AppShell({
           ))}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
+        <div className="relative z-10 border-t border-white/10 p-3 pb-28">
           <button
             type="button"
             onClick={salir}
@@ -363,6 +343,9 @@ export function AppShell({
             {!colapsado && "Cerrar sesión"}
           </button>
         </div>
+
+        {/* Olas decorativas al pie de la barra lateral */}
+        <WavesBackground className="waves-sidebar" />
       </aside>
 
       {/* Contenido */}
@@ -404,9 +387,6 @@ export function AppShell({
             </div>
 
             <div className="hidden items-center gap-3 sm:flex">
-              <span className="text-sm font-semibold text-slate-900">
-                {sesion.username}
-              </span>
               <button
                 type="button"
                 className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"

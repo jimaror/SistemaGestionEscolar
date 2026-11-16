@@ -1,8 +1,11 @@
 "use client";
 
-export function WavesBackground() {
+export function WavesBackground({ className }: { className?: string }) {
   return (
-    <div className="waves-container" aria-hidden="true">
+    <div
+      className={className ? `waves-container ${className}` : "waves-container"}
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 1200 320" preserveAspectRatio="none">
         <defs>
           <linearGradient id="gradientWave1" x1="0%" y1="100%" x2="0%" y2="0%">
