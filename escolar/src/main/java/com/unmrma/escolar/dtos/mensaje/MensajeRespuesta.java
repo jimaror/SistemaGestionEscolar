@@ -11,6 +11,7 @@ public class MensajeRespuesta {
     private Integer id;
     private Integer conversacionId;
     private Integer remitenteId;
+    private Integer destinatarioUsuarioId;
     private String contenido;
     private LocalDateTime fechaEnvio;
     private Boolean leido;
@@ -23,6 +24,9 @@ public class MensajeRespuesta {
 
     public Integer getRemitenteId() { return remitenteId; }
     public void setRemitenteId(Integer remitenteId) { this.remitenteId = remitenteId; }
+
+    public Integer getDestinatarioUsuarioId() { return destinatarioUsuarioId; }
+    public void setDestinatarioUsuarioId(Integer destinatarioUsuarioId) { this.destinatarioUsuarioId = destinatarioUsuarioId; }
 
     public String getContenido() { return contenido; }
     public void setContenido(String contenido) { this.contenido = contenido; }

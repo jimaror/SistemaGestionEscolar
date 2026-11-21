@@ -117,6 +117,7 @@ export const listarParticipantes = () =>
 
 export async function crearMensaje(payload: {
   conversacionId: number;
+  destinatarioUsuarioId: number;
   contenido: string;
 }): Promise<Mensaje> {
   const { data } = await api.post<Mensaje>("/mensajes", payload);

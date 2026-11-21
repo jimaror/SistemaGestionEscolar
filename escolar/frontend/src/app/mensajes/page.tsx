@@ -130,6 +130,17 @@ export default function MensajesPage() {
     [mensajesPorConversacion, seleccionada]
   );
 
+  const destinatarioActual = useMemo(() => {
+    if (!seleccionada) return null;
+    const participantesConv = participantesPorConversacion.get(seleccionada) ?? [];
+    const destinatario =
+      participantesConv.find((p) => p.usuarioId !== usuarioId) ??
+      participantesConv.find((p) => p.usuarioId != null) ??
+      participantesConv[0] ??
+      null;
+    return destinatario ?? null;
+  }, [participantesPorConversacion, seleccionada, usuarioId]);
+
   const filtradas = useMemo(() => {
     const q = normalizar(busqueda);
     if (!q) return conversaciones;
@@ -168,8 +179,15 @@ export default function MensajesPage() {
     setEnviando(true);
     setErrorEnvio(null);
     try {
+      const destinatarioParticipante =
+        destinatarioActual ??
+        (participantesPorConversacion.get(seleccionada) ?? [])[0] ??
+        null;
+      const destinatarioUsuarioId =
+        destinatarioParticipante?.usuarioId ?? usuarioId ?? 0;
       const nuevo = await crearMensaje({
         conversacionId: seleccionada,
+        destinatarioUsuarioId,
         contenido,
       });
       setMensajes((prev) => [...prev, nuevo]);
@@ -339,6 +357,15 @@ export default function MensajesPage() {
                       <p className="text-xs text-slate-500">
                         Creada el {formatearFechaHora(conversacionActual.fechaCreacion)}
                       </p>
+                      {destinatarioActual && (
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          Dirigido a:{" "}
+                          <span className="font-semibold text-slate-700">
+                            {destinatarioActual.rolEnConversacion ??
+                              `Participante #${destinatarioActual.usuarioId ?? "—"}`}
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="brand">

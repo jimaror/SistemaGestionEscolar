@@ -45,7 +45,11 @@ public class MensajeService {
     public MensajeRespuesta guardar(MensajeCrearRequest solicitud, Integer remitenteId) {
         Mensaje entidad = mapper.aEntidad(solicitud);
         entidad.setRemitenteId(remitenteId);
-        return mapper.aRespuesta(repositorio.save(entidad));
+        MensajeRespuesta respuesta = mapper.aRespuesta(repositorio.save(entidad));
+        // El destinatario es quien recibe el mensaje; se fija desde la solicitud
+        // validada, ya que el remitente siempre es la cuenta autenticada.
+        respuesta.setDestinatarioUsuarioId(solicitud.getDestinatarioUsuarioId());
+        return respuesta;
     }
 
     public MensajeRespuesta actualizar(Integer id,

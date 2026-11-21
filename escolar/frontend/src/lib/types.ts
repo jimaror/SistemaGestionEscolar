@@ -236,6 +236,7 @@ export interface Mensaje {
   id: number;
   conversacionId: number;
   remitenteId: number | null;
+  destinatarioUsuarioId: number | null;
   contenido: string;
   fechaEnvio: string | null;
   leido: boolean | null;
