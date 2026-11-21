@@ -66,8 +66,14 @@ export default function HorarioDocentePage() {
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usuarioId, setUsuarioId] = useState<number | null>(null);
 
-  const usuarioId = Number(localStorage.getItem("usuarioId") ?? "0");
+  // localStorage solo existe en el cliente, se lee tras montar el componente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setUsuarioId(Number(localStorage.getItem("usuarioId") ?? "0"));
+    }
+  }, []);
 
   const maestro = useMemo(
     () => maestros.find((m) => m.idUsuario === usuarioId) ?? null,
