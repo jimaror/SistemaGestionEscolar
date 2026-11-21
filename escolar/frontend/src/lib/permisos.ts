@@ -13,7 +13,7 @@ export const PERMISOS = {
   usuarios: ["Director"],
   grados: ["Director", "Maestro", "Alumno", "Tutor"],
   asignacionesDocentes: ["Director"],
-  horarioDocente: ["Director", "Maestro"],
+  horarioDocente: ["Maestro"],
 } as const;
 
 export type Modulo = keyof typeof PERMISOS;

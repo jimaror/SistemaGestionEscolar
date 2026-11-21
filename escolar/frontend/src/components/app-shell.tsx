@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cargarNombreUsuario, cerrarSesion, obtenerToken } from "@/lib/api";
-import { PERMISOS } from "@/lib/permisos";
+import { PERMISOS, rolPermitido } from "@/lib/permisos";
+import { listarJustificaciones, listarMensajes, listarReuniones } from "@/lib/servicios";
+import type { JustificacionAusencia, Mensaje, Reunion } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { EscudoNicaragua } from "@/components/escudo";
 import { cn } from "@/lib/utils";
@@ -171,6 +173,13 @@ export function AppShell({
   const [autorizado, setAutorizado] = useState(false);
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
   const [colapsado, setColapsado] = useState(false);
+  const [panelAbierto, setPanelAbierto] = useState<"mensajes" | "notificaciones" | null>(null);
+  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
+  const [justificaciones, setJustificaciones] = useState<JustificacionAusencia[]>([]);
+  const [reuniones, setReuniones] = useState<Reunion[]>([]);
+  const [cargandoPanel, setCargandoPanel] = useState(false);
+  const refPanelMensajes = useRef<HTMLDivElement | null>(null);
+  const refPanelNotificaciones = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!obtenerToken()) {
@@ -196,6 +205,87 @@ export function AppShell({
   useEffect(() => {
     setSidebarAbierto(false);
   }, [pathname]);
+
+  // Carga los mensajes y notificaciones cuando se abre un panel
+  useEffect(() => {
+    if (panelAbierto === null) return;
+    let vivo = true;
+    const cargar = async () => {
+      setCargandoPanel(true);
+      try {
+        const [ms, js, rs] = await Promise.all([
+          rolPermitido("mensajes") ? listarMensajes() : Promise.resolve<Mensaje[]>([]),
+          rolPermitido("justificaciones")
+            ? listarJustificaciones()
+            : Promise.resolve<JustificacionAusencia[]>([]),
+          rolPermitido("reuniones") ? listarReuniones() : Promise.resolve<Reunion[]>([]),
+        ]);
+        if (!vivo) return;
+        setMensajes(ms);
+        setJustificaciones(js);
+        setReuniones(rs);
+      } catch {
+        if (vivo) {
+          setMensajes([]);
+          setJustificaciones([]);
+          setReuniones([]);
+        }
+      } finally {
+        if (vivo) setCargandoPanel(false);
+      }
+    };
+    void cargar();
+    return () => {
+      vivo = false;
+    };
+  }, [panelAbierto]);
+
+  // Cierra los paneles al hacer click afuera
+  useEffect(() => {
+    if (panelAbierto === null) return;
+    const alClick = (evento: MouseEvent) => {
+      const objetivo = evento.target as Node;
+      if (refPanelMensajes.current?.contains(objetivo)) return;
+      if (refPanelNotificaciones.current?.contains(objetivo)) return;
+      setPanelAbierto(null);
+    };
+    document.addEventListener("mousedown", alClick);
+    return () => document.removeEventListener("mousedown", alClick);
+  }, [panelAbierto]);
+
+  const mensajesSinLeer = useMemo(
+    () => mensajes.filter((m) => m.leido === false).length,
+    [mensajes]
+  );
+
+  const pendientesJustificaciones = useMemo(
+    () =>
+      justificaciones
+        .filter((j) => j.estado === "Pendiente")
+        .slice(0, 6)
+        .map((j) => ({
+          id: j.id,
+          titulo: "Justificación pendiente",
+          detalle: j.motivo ?? "Sin motivo registrado",
+          href: "/justificaciones",
+        })),
+    [justificaciones]
+  );
+
+  const notificaciones = useMemo(
+    () => [
+      ...pendientesJustificaciones,
+      ...reuniones.slice(0, 6).map((r) => ({
+        id: r.id,
+        titulo: "Reunión",
+        detalle: r.titulo ?? "Reunión programada",
+        href: "/reuniones",
+      })),
+    ],
+    [pendientesJustificaciones, reuniones]
+  );
+
+  const notificacionesSinLeer = pendientesJustificaciones.length;
 
   const menu = useMemo(() => {
     if (!sesion) return GRUPOS_NAV;
@@ -424,21 +514,154 @@ export function AppShell({
                   {nombreUsuario}
                 </span>
               )}
-              <button
-                type="button"
-                className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"
-                aria-label="Mensajes"
-              >
-                <MessageIcon className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"
-                aria-label="Notificaciones"
-              >
-                <BellIcon className="h-5 w-5" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-2 ring-white" />
-              </button>
+              <div className="relative" ref={refPanelMensajes}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPanelAbierto((panel) =>
+                      panel === "mensajes" ? null : "mensajes"
+                    )
+                  }
+                  className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"
+                  aria-label="Mensajes"
+                >
+                  <MessageIcon className="h-5 w-5" />
+                  {mensajesSinLeer > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-fuchsia-500 px-1 text-[10px] font-bold text-white">
+                      {mensajesSinLeer > 9 ? "9+" : mensajesSinLeer}
+                    </span>
+                  )}
+                </button>
+                {panelAbierto === "mensajes" && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                      <p className="text-sm font-bold text-slate-900">
+                        Mensajes recibidos
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPanelAbierto(null);
+                          router.push("/mensajes");
+                        }}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        Ver todos
+                      </button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {cargandoPanel ? (
+                        <p className="px-4 py-6 text-center text-xs text-slate-400">
+                          Cargando mensajes…
+                        </p>
+                      ) : mensajes.length === 0 ? (
+                        <p className="px-4 py-6 text-center text-xs text-slate-400">
+                          No recibiste mensajes todavía.
+                        </p>
+                      ) : (
+                        mensajes.slice(0, 8).map((mensaje) => (
+                          <button
+                            key={mensaje.id}
+                            type="button"
+                            onClick={() => {
+                              setPanelAbierto(null);
+                              router.push("/mensajes");
+                            }}
+                            className="block w-full border-b border-slate-50 px-4 py-2.5 text-left transition hover:bg-slate-50 last:border-0"
+                          >
+                            <p className="truncate text-xs text-slate-700">
+                              {mensaje.conversacionId
+                                ? `Conversación #${mensaje.conversacionId}`
+                                : "Mensaje"}
+                            </p>
+                            <p className="truncate text-xs text-slate-500">
+                              {mensaje.contenido}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {mensaje.leido === false ? "No leído" : "Leído"} ·{" "}
+                              {mensaje.fechaEnvio
+                                ? new Date(mensaje.fechaEnvio).toLocaleString()
+                                : ""}
+                            </p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={refPanelNotificaciones}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPanelAbierto((panel) =>
+                      panel === "notificaciones" ? null : "notificaciones"
+                    )
+                  }
+                  className="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-900"
+                  aria-label="Notificaciones"
+                >
+                  <BellIcon className="h-5 w-5" />
+                  {notificacionesSinLeer > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                      {notificacionesSinLeer > 9 ? "9+" : notificacionesSinLeer}
+                    </span>
+                  )}
+                </button>
+                {panelAbierto === "notificaciones" && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                      <p className="text-sm font-bold text-slate-900">
+                        Notificaciones
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPanelAbierto(null);
+                          router.push("/justificaciones");
+                        }}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        Ver todas
+                      </button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {cargandoPanel ? (
+                        <p className="px-4 py-6 text-center text-xs text-slate-400">
+                          Cargando notificaciones…
+                        </p>
+                      ) : notificaciones.length === 0 ? (
+                        <p className="px-4 py-6 text-center text-xs text-slate-400">
+                          No tenés notificaciones pendientes.
+                        </p>
+                      ) : (
+                        notificaciones.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setPanelAbierto(null);
+                              router.push(item.href);
+                            }}
+                            className="flex w-full items-start gap-2 border-b border-slate-50 px-4 py-2.5 text-left transition hover:bg-slate-50 last:border-0"
+                          >
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-semibold text-slate-800">
+                                {item.titulo}
+                              </span>
+                              <span className="block truncate text-xs text-slate-500">
+                                {item.detalle}
+                              </span>
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3 border-l border-slate-200 pl-3">
