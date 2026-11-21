@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   crearMensaje,
   listarConversaciones,
+  listarMaestros,
   listarMensajes,
   listarParticipantes,
   mensajeDeError,
@@ -19,6 +20,7 @@ import { rolPermitido } from "@/lib/permisos";
 import type {
   Conversacion,
   ConversacionParticipante,
+  MaestroResumen,
   Mensaje,
 } from "@/lib/types";
 import { formatearFechaHora, normalizar } from "@/lib/format";
@@ -40,6 +42,7 @@ export default function MensajesPage() {
   const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [participantes, setParticipantes] = useState<ConversacionParticipante[]>([]);
+  const [maestros, setMaestros] = useState<MaestroResumen[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
@@ -56,10 +59,11 @@ export default function MensajesPage() {
     setError(null);
     setErrorEnvio(null);
     try {
-      const [convs, msgs, parts] = await Promise.all([
+      const [convs, msgs, parts, maes] = await Promise.all([
         listarConversaciones(),
         listarMensajes(),
         listarParticipantes(),
+        listarMaestros(),
       ]);
       const ordenadas = [...convs].sort((a, b) => {
         const ultimoA = Math.max(
@@ -79,6 +83,7 @@ export default function MensajesPage() {
       setConversaciones(ordenadas);
       setMensajes(msgs);
       setParticipantes(parts);
+      setMaestros(maes);
       setSeleccionada((actual) =>
         actual && ordenadas.some((c) => c.id === actual)
           ? actual
@@ -138,8 +143,11 @@ export default function MensajesPage() {
       participantesConv.find((p) => p.usuarioId != null) ??
       participantesConv[0] ??
       null;
-    return destinatario ?? null;
-  }, [participantesPorConversacion, seleccionada, usuarioId]);
+    if (!destinatario) return null;
+    const maestro = maestros.find((m) => m.idUsuario === destinatario.usuarioId);
+    const nombreMaestro = maestro ? `${maestro.nombre} ${maestro.apellido}`.trim() : null;
+    return { ...destinatario, nombre: nombreMaestro };
+  }, [participantesPorConversacion, seleccionada, usuarioId, maestros]);
 
   const filtradas = useMemo(() => {
     const q = normalizar(busqueda);
@@ -361,7 +369,8 @@ export default function MensajesPage() {
                         <p className="mt-0.5 text-xs text-slate-500">
                           Dirigido a:{" "}
                           <span className="font-semibold text-slate-700">
-                            {destinatarioActual.rolEnConversacion ??
+                            {destinatarioActual.nombre ??
+                              destinatarioActual.rolEnConversacion ??
                               `Participante #${destinatarioActual.usuarioId ?? "—"}`}
                           </span>
                         </p>
