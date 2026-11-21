@@ -508,10 +508,17 @@ export function AppShell({
               )}
             </div>
 
-            <div className="hidden items-center gap-3 sm:flex">
+            <div className="flex items-center gap-3">
               {nombreUsuario && (
-                <span className="max-w-[17rem] truncate bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-600 bg-clip-text text-sm font-semibold leading-tight tracking-tight text-transparent">
-                  {nombreUsuario}
+                <span className="flex max-w-[17rem] flex-col leading-tight">
+                  <span className="truncate bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-600 bg-clip-text text-sm font-semibold tracking-tight text-transparent">
+                    {nombreUsuario}
+                  </span>
+                  {sesion?.rol && (
+                    <span className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      {sesion.rol}
+                    </span>
+                  )}
                 </span>
               )}
               <div className="relative" ref={refPanelMensajes}>
