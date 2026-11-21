@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,7 +26,6 @@ public class SincronizadorSecuencias {
     private record Tabla(String nombre, String columnaId) {}
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void sincronizar() {
         List<Tabla> tablas = List.of(
                 new Tabla("usuarios", "id_usuario"),
@@ -55,15 +53,19 @@ public class SincronizadorSecuencias {
                 new Tabla("notificaciones", "id_notificacion")
         );
 
-        for (Tabla tabla : tablas) {
-            try {
-                String sql = "SELECT setval(pg_get_serial_sequence('" + tabla.nombre() + "', '" + tabla.columnaId()
-                        + "'), COALESCE((SELECT MAX(" + tabla.columnaId() + ") FROM " + tabla.nombre() + "), 1), true)";
-                entityManager.createNativeQuery(sql).getSingleResult();
-            } catch (Exception e) {
-                // Si la tabla/secuencia no existe o el motor no es PostgreSQL, se omite.
-                log.debug("No se pudo sincronizar secuencia de {}.{}: {}", tabla.nombre(), tabla.columnaId(), e.getMessage());
+        try {
+            for (Tabla tabla : tablas) {
+                try {
+                    String sql = "SELECT setval(pg_get_serial_sequence('" + tabla.nombre() + "', '" + tabla.columnaId()
+                            + "'), COALESCE((SELECT MAX(" + tabla.columnaId() + ") FROM " + tabla.nombre() + "), 1), true)";
+                    entityManager.createNativeQuery(sql).getSingleResult();
+                } catch (Exception e) {
+                    // Si la tabla/secuencia no existe o el motor no es PostgreSQL, se omite sin romper el arranque.
+                    log.debug("No se pudo sincronizar secuencia de {}.{}: {}", tabla.nombre(), tabla.columnaId(), e.getMessage());
+                }
             }
+        } catch (Exception e) {
+            log.warn("Sincronización de secuencias omitida por error general: {}", e.getMessage());
         }
         log.info("Sincronización de secuencias verificada");
     }
