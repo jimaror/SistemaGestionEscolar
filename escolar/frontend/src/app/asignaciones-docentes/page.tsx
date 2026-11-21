@@ -29,18 +29,21 @@ import { cn } from "@/lib/utils";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
+// Horario real de Nicaragua: mañana 8:00-12:00, tarde 1:00-5:00
 const FILAS_HORARIO = [
-  { clave: "h1", etiqueta: "8:00 - 8:55", tipo: "clase" },
-  { clave: "h2", etiqueta: "8:55 - 9:40", tipo: "clase" },
-  { clave: "rec1", etiqueta: "20° RECREO", tipo: "recreo" },
-  { clave: "h3", etiqueta: "10:00 - 10:45", tipo: "clase" },
-  { clave: "h4", etiqueta: "10:45 - 11:30", tipo: "clase" },
-  { clave: "h5", etiqueta: "11:30 - 12:15", tipo: "clase" },
-  { clave: "col", etiqueta: "40° COLOCACIÓN", tipo: "colocacion" },
-  { clave: "h6", etiqueta: "13:50 - 14:35", tipo: "clase" },
-  { clave: "h7", etiqueta: "14:35 - 15:20", tipo: "clase" },
-  { clave: "rec2", etiqueta: "5° RECREO", tipo: "recreo" },
-  { clave: "h8", etiqueta: "15:25 - 16:10", tipo: "clase" },
+  { clave: "h1", etiqueta: "8:00 - 8:45", tipo: "clase" },
+  { clave: "h2", etiqueta: "8:45 - 9:30", tipo: "clase" },
+  { clave: "rec1", etiqueta: "RECREO", tipo: "recreo" },
+  { clave: "h3", etiqueta: "9:45 - 10:30", tipo: "clase" },
+  { clave: "h4", etiqueta: "10:30 - 11:15", tipo: "clase" },
+  { clave: "h5", etiqueta: "11:15 - 12:00", tipo: "clase" },
+  { clave: "col", etiqueta: "ALMUERZO", tipo: "colocacion" },
+  { clave: "h6", etiqueta: "1:00 - 1:45", tipo: "clase" },
+  { clave: "h7", etiqueta: "1:45 - 2:30", tipo: "clase" },
+  { clave: "rec2", etiqueta: "RECREO", tipo: "recreo" },
+  { clave: "h8", etiqueta: "2:45 - 3:30", tipo: "clase" },
+  { clave: "h9", etiqueta: "3:30 - 4:15", tipo: "clase" },
+  { clave: "h10", etiqueta: "4:15 - 5:00", tipo: "clase" },
 ];
 
 const colorClase = (nombre: string) => {
