@@ -14,17 +14,21 @@ import {
   agregarParticipante,
   crearConversacion,
   crearMensaje,
+  listarAlumnos,
   listarConversaciones,
   listarDestinatarios,
   listarMaestros,
   listarMensajes,
   listarParticipantes,
+  listarTutores,
+  listarUsuarios,
   mensajeDeError,
 } from "@/lib/servicios";
 import { rolPermitido } from "@/lib/permisos";
 import type {
   Conversacion,
   ConversacionParticipante,
+  Destinatario,
   MaestroResumen,
   Mensaje,
 } from "@/lib/types";
@@ -233,9 +237,79 @@ export default function MensajesPage() {
     setNuevoContenido("");
     setCargandoDestinatarios(true);
     try {
-      const personas = await listarDestinatarios();
+      let personas: Destinatario[] | null = null;
+      try {
+        personas = await listarDestinatarios();
+      } catch {
+        // Backend anterior: combinar los catalogos disponibles. Cada llamada
+        // se evalua por separado para que un permiso denegado no rompa todo.
+        personas = [];
+        const [maesR, tusR, alusR, ususR] = await Promise.allSettled([
+          listarMaestros(),
+          listarTutores(),
+          listarAlumnos(),
+          listarUsuarios(),
+        ]);
+        if (maesR.status === "fulfilled") {
+          maesR.value.forEach((m) => {
+            if (m.idUsuario) {
+              personas!.push({
+                usuarioId: m.idUsuario,
+                nombres: m.nombre,
+                apellidos: m.apellido,
+                rol: "Maestro",
+                username: null,
+              });
+            }
+          });
+        }
+        if (tusR.status === "fulfilled") {
+          tusR.value.forEach((t) => {
+            if (t.usuario?.id) {
+              personas!.push({
+                usuarioId: t.usuario.id,
+                nombres: t.usuario.nombres,
+                apellidos: t.usuario.apellidos,
+                rol: "Tutor",
+                username: t.usuario.username,
+              });
+            }
+          });
+        }
+        if (alusR.status === "fulfilled") {
+          alusR.value.forEach((a) => {
+            if (a.idUsuario) {
+              personas!.push({
+                usuarioId: a.idUsuario,
+                nombres: a.nombre,
+                apellidos: a.apellido,
+                rol: "Alumno",
+                username: null,
+              });
+            }
+          });
+        }
+        if (ususR.status === "fulfilled") {
+          ususR.value.forEach((u) => {
+            personas!.push({
+              usuarioId: u.id,
+              nombres: u.nombres,
+              apellidos: u.apellidos,
+              rol: u.rol,
+              username: u.username,
+            });
+          });
+        }
+      }
+
+      const vistos = new Set<number>();
       const opciones = personas
-        .filter((p) => p.usuarioId > 0)
+        .filter((p) => p.usuarioId > 0 && p.usuarioId !== usuarioId)
+        .filter((p) => {
+          if (vistos.has(p.usuarioId)) return false;
+          vistos.add(p.usuarioId);
+          return true;
+        })
         .map((p) => {
           const nombre = [p.nombres, p.apellidos].filter(Boolean).join(" ").trim();
           const rol = p.rol || "Usuario";
