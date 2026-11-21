@@ -25,26 +25,25 @@ import type {
   Seccion,
 } from "@/lib/types";
 import { PlusIcon, TrashIcon, ClockIcon } from "@/components/icons";
-import { cn } from "@/lib/utils";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const HORAS = ["7:00-8:00", "8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-12:00"];
 
-const colorPorMateria = (nombre: string) => {
+const colorClase = (nombre: string) => {
   const n = nombre.toLowerCase();
-  if (n.includes("lengua")) return "from-indigo-500 to-blue-600 text-indigo-100 border-indigo-200";
-  if (n.includes("matem")) return "from-fuchsia-500 to-pink-600 text-fuchsia-100 border-fuchsia-200";
-  if (n.includes("ciencias") || n.includes("biología") || n.includes("biologia")) return "from-emerald-500 to-teal-600 text-emerald-100 border-emerald-200";
-  if (n.includes("social") || n.includes("conviv") || n.includes("civismo")) return "from-amber-500 to-orange-600 text-amber-100 border-amber-200";
-  if (n.includes("ingl")) return "from-blue-500 to-sky-600 text-blue-100 border-blue-200";
-  if (n.includes("geograf")) return "from-teal-500 to-cyan-600 text-teal-100 border-teal-200";
-  if (n.includes("historia")) return "from-violet-500 to-purple-600 text-violet-100 border-violet-200";
-  if (n.includes("física") || n.includes("fisica")) return "from-cyan-500 to-sky-600 text-cyan-100 border-cyan-200";
-  if (n.includes("química") || n.includes("quimica")) return "from-rose-500 to-pink-600 text-rose-100 border-rose-200";
-  if (n.includes("inform")) return "from-purple-500 to-fuchsia-600 text-purple-100 border-purple-200";
-  if (n.includes("educación física") || n.includes("educacion fisica")) return "from-orange-500 to-red-600 text-orange-100 border-orange-200";
-  if (n.includes("educación artística") || n.includes("educacion artistica")) return "from-lime-500 to-green-600 text-lime-100 border-lime-200";
-  return "from-slate-500 to-gray-600 text-slate-100 border-slate-200";
+  if (n.includes("lengua")) return "bg-indigo-100 border-indigo-200 text-indigo-900";
+  if (n.includes("matem")) return "bg-fuchsia-100 border-fuchsia-200 text-fuchsia-900";
+  if (n.includes("ciencias") || n.includes("biología") || n.includes("biologia")) return "bg-emerald-100 border-emerald-200 text-emerald-900";
+  if (n.includes("social") || n.includes("conviv") || n.includes("civismo")) return "bg-amber-100 border-amber-200 text-amber-900";
+  if (n.includes("ingl")) return "bg-blue-100 border-blue-200 text-blue-900";
+  if (n.includes("geograf")) return "bg-teal-100 border-teal-200 text-teal-900";
+  if (n.includes("historia")) return "bg-violet-100 border-violet-200 text-violet-900";
+  if (n.includes("física") || n.includes("fisica")) return "bg-cyan-100 border-cyan-200 text-cyan-900";
+  if (n.includes("química") || n.includes("quimica")) return "bg-rose-100 border-rose-200 text-rose-900";
+  if (n.includes("inform")) return "bg-purple-100 border-purple-200 text-purple-900";
+  if (n.includes("educación física") || n.includes("educacion fisica")) return "bg-orange-100 border-orange-200 text-orange-900";
+  if (n.includes("educación artística") || n.includes("educacion artistica")) return "bg-lime-100 border-lime-200 text-lime-900";
+  return "bg-slate-100 border-slate-200 text-slate-900";
 };
 
 export default function AsignacionesDocentesPage() {
@@ -148,11 +147,11 @@ export default function AsignacionesDocentesPage() {
     }
   };
 
-  // ---- Horario semanal simple (distribución automática de las materias asignadas) ----
   const horario = useMemo(() => {
     const grid: Record<string, Record<string, string>> = {};
     DIAS.forEach((d) => {
-      HORAS.forEach((h) => { grid[d] = grid[d] ?? {}; grid[d][h] = ""; });
+      grid[d] = {};
+      HORAS.forEach((h) => { grid[d][h] = ""; });
     });
     const lista = [...asignaciones].sort((a, b) => a.asignaturaId - b.asignaturaId);
     let idx = 0;
@@ -241,7 +240,7 @@ export default function AsignacionesDocentesPage() {
 
         {seccionActual && (
           <>
-            {/* Tarjetas de materias asignadas (vista vistosa) */}
+            {/* Tarjetas de materias asignadas */}
             <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
                 <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -268,23 +267,14 @@ export default function AsignacionesDocentesPage() {
                     {asignaciones.map((a) => {
                       const materia = asignaturasPorId.get(a.asignaturaId);
                       const maestro = maestrosPorId.get(a.maestroId);
-                      const gradiente = colorPorMateria(materia?.nombre ?? "");
+                      const clase = colorClase(materia?.nombre ?? "");
                       return (
-                        <div
-                          key={a.id}
-                          className={cn(
-                            "rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all cursor-default group",
-                            gradiente.replace("text-", "text-slate-900"),
-                          )
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <span className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm", gradiente)}>
+                        <div key={a.id} className="rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all">
+                          <div className={`flex items-start justify-between mb-2 ${clase}`}>
+                            <span className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm">
                               {materia?.nombre ?? "Materia"}
                             </span>
-                            <Badge
-                              variant={a.estado ? "success" : "default"}
-                              className="text-[10px]"
-                            >
+                            <Badge variant={a.estado ? "success" : "default"} className="text-[10px]">
                               {a.estado ? "Activa" : "Inactiva"}
                             </Badge>
                           </div>
@@ -436,12 +426,11 @@ export default function AsignacionesDocentesPage() {
                         {DIAS.map((dia) => (
                           <td
                             key={dia}
-                            className={cn(
-                              "px-4 py-3 text-xs border-b border-indigo-100 text-center rounded-lg",
+                            className={(
                               horario[dia][hora]
                                 ? "bg-white text-slate-800 font-medium shadow-sm"
                                 : "bg-indigo-50 text-indigo-300 italic"
-                            )}
+                            ) + " px-4 py-3 text-xs border-b border-indigo-100 text-center rounded-lg"}
                           >
                             {horario[dia][hora] || "—"}
                           </td>
