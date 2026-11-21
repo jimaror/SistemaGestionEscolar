@@ -135,6 +135,13 @@ export interface GradoResumen {
   orden?: number;
 }
 
+export interface MaestroResumen {
+  id: number;
+  nombre: string;
+  apellido: string;
+  especialidad: string | null;
+}
+
 export interface DocenteResumen {
   id: number;
   nombre: string;

@@ -19,6 +19,7 @@ import {
   listarAsignaciones,
   listarAsignaturas,
   listarAsistencias,
+  listarMaestros,
   listarMatriculas,
   listarSecciones,
   mensajeDeError,
@@ -29,6 +30,7 @@ import type {
   AsignacionDocente,
   Asignatura,
   Asistencia,
+  MaestroResumen,
   Matricula,
   Seccion,
 } from "@/lib/types";
@@ -65,6 +67,9 @@ interface FilaAsistencia {
   estudiante: string;
   iniciales: string;
   seccion: string;
+  grado: string;
+  materia: string;
+  maestro: string;
   fecha: string;
   fechaTexto: string;
   estado: string;
@@ -87,6 +92,7 @@ export default function AsistenciasPage() {
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [asignaciones, setAsignaciones] = useState<AsignacionDocente[]>([]);
   const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+  const [maestros, setMaestros] = useState<MaestroResumen[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
@@ -153,13 +159,14 @@ export default function AsistenciasPage() {
     setCargando(true);
     setError(null);
     try {
-      const [a, m, al, s, asig, asigt] = await Promise.all([
+      const [a, m, al, s, asig, asigt, maest] = await Promise.all([
         listarAsistencias(),
         listarMatriculas(),
         listarAlumnos(),
         listarSecciones(),
         listarAsignaciones(),
         listarAsignaturas(),
+        listarMaestros(),
       ]);
       setAsistencias(a);
       setMatriculas(m);
@@ -167,6 +174,7 @@ export default function AsistenciasPage() {
       setSecciones(s);
       setAsignaciones(asig);
       setAsignaturas(asigt);
+      setMaestros(maest);
     } catch (err) {
       setError(mensajeDeError(err));
     } finally {
@@ -183,6 +191,9 @@ export default function AsistenciasPage() {
     const alumnosPorId = indexarPor(alumnos);
     const matriculasPorId = indexarPor(matriculas);
     const seccionesPorId = indexarPor(secciones);
+    const asignacionesPorId = indexarPor(asignaciones);
+    const asignaturasPorId = indexarPor(asignaturas);
+    const maestrosPorId = indexarPor(maestros);
 
     return asistencias
       .map((asistencia) => {
@@ -191,6 +202,15 @@ export default function AsistenciasPage() {
         const seccion = matricula?.seccionId
           ? seccionesPorId.get(matricula.seccionId)
           : undefined;
+        const asignacion = asistencia.asignacionDocenteId
+          ? asignacionesPorId.get(asistencia.asignacionDocenteId)
+          : undefined;
+        const maestro = asignacion?.maestroId
+          ? maestrosPorId.get(asignacion.maestroId)
+          : undefined;
+        const asignatura = asignacion?.asignaturaId
+          ? asignaturasPorId.get(asignacion.asignaturaId)
+          : undefined;
         return {
           id: asistencia.id,
           estudiante: alumno
@@ -198,6 +218,11 @@ export default function AsistenciasPage() {
             : `Matrícula #${asistencia.matriculaId}`,
           iniciales: alumno ? iniciales(alumno.nombre, alumno.apellido) : "?",
           seccion: seccion ? `${seccion.nombre} · ${seccion.turno}` : "—",
+          grado: seccion?.grado?.nombre ?? "—",
+          materia: asignatura?.nombre ?? "—",
+          maestro: maestro
+            ? `${maestro.nombre} ${maestro.apellido}`.trim()
+            : "—",
           fecha: asistencia.fecha ?? "",
           fechaTexto: formatearFecha(asistencia.fecha),
           estado: asistencia.estado ?? "Sin estado",
@@ -205,7 +230,7 @@ export default function AsistenciasPage() {
         };
       })
       .sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0));
-  }, [asistencias, matriculas, alumnos, secciones]);
+  }, [asistencias, matriculas, alumnos, secciones, asignaciones, asignaturas, maestros]);
 
   const estados = useMemo(
     () => Array.from(new Set(filas.map((f) => f.estado))),
@@ -699,7 +724,10 @@ export default function AsistenciasPage() {
                                 {fila.estudiante}
                               </p>
                               <p className="truncate text-xs text-slate-500">
-                                {fila.seccion}
+                                {fila.grado} · {fila.seccion}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">
+                                {fila.materia} — {fila.maestro}
                               </p>
                               {fila.observacion && fila.observacion !== "—" && (
                                 <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -804,7 +832,10 @@ export default function AsistenciasPage() {
                                     {fila.estudiante}
                                   </p>
                                   <p className="truncate text-xs text-slate-500">
-                                    {fila.seccion}
+                                    {fila.grado} · {fila.seccion}
+                                  </p>
+                                  <p className="truncate text-xs text-slate-500">
+                                    {fila.materia} — {fila.maestro}
                                   </p>
                                 </div>
                               </div>
@@ -859,7 +890,10 @@ export default function AsistenciasPage() {
                             {fila.estudiante}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {fila.fechaTexto} · {fila.seccion}
+                            {fila.grado} · {fila.seccion}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {fila.materia} — {fila.maestro}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
                             {fila.observacion}

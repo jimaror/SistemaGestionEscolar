@@ -66,6 +66,7 @@ export async function subirArchivo(archivo: File): Promise<string> {
   return data;
 }
 export const listarGradosConOrden = () => obtener<GradoResumen[]>("/grados?ordenado=true");
+export const listarMaestros = () => obtener<MaestroResumen[]>("/maestros");
 
 // Funciones CRUD para Grados (solo Director puede crear/actualizar/eliminar)
 export async function crearGrado(payload: { nombre: string; nivel: string; orden: number }): Promise<GradoResumen> {
