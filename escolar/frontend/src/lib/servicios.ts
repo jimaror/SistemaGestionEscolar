@@ -56,6 +56,20 @@ export const listarAsignaturas = () => obtener<Asignatura[]>("/asignaturas");
 export const listarSecciones = () => obtener<Seccion[]>("/secciones");
 export const listarGrados = () => obtener<GradoResumen[]>("/grados");
 
+export async function crearAsignacionDocente(
+  payload: AsignacionDocenteCrearRequest,
+): Promise<AsignacionDocente> {
+  const { data } = await api.post<AsignacionDocente>(
+    "/asignaciones-docentes",
+    payload,
+  );
+  return data;
+}
+
+export async function eliminarAsignacionDocente(id: number): Promise<void> {
+  await api.delete<void>(`/asignaciones-docentes/${id}`);
+}
+
 // Subir un archivo al backend y obtener su URL para usar en materiales
 export async function subirArchivo(archivo: File): Promise<string> {
   const formData = new FormData();

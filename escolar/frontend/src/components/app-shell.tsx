@@ -134,6 +134,12 @@ const GRUPOS_NAV: NavGroup[] = [
         icon: ShieldIcon,
         roles: [...PERMISOS.usuarios],
       },
+      {
+        nombre: "Asignaciones Docentes",
+        href: "/asignaciones-docentes",
+        icon: FolderIcon,
+        roles: [...PERMISOS.asignacionesDocentes],
+      },
     ],
   },
 ];

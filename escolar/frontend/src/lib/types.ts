@@ -106,6 +106,14 @@ export interface AsignacionDocente {
   estado: boolean | null;
 }
 
+export interface AsignacionDocenteCrearRequest {
+  asignaturaId: number;
+  seccionId: number;
+  maestroId: number;
+  horasSemanales: number;
+  estado: boolean;
+}
+
 export interface Asignatura {
   id: number;
   nombre: string;
