@@ -288,6 +288,7 @@ export default function MensajesPage() {
       setModalNuevoAbierto(false);
       setNuevoContenido("");
       setNuevoDestinatarioId("");
+      setSeleccionada(conversacion.id);
       await cargar();
     } catch (err) {
       setErrorNuevo(mensajeDeError(err));
