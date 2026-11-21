@@ -7,13 +7,18 @@ import { Cargando, ErrorEstado, Vacio } from "@/components/data-states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  agregarParticipante,
+  crearConversacion,
   crearMensaje,
   listarConversaciones,
   listarMaestros,
   listarMensajes,
   listarParticipantes,
+  listarTutores,
   mensajeDeError,
 } from "@/lib/servicios";
 import { rolPermitido } from "@/lib/permisos";
@@ -22,6 +27,7 @@ import type {
   ConversacionParticipante,
   MaestroResumen,
   Mensaje,
+  TutorResumen,
 } from "@/lib/types";
 import { formatearFechaHora, normalizar } from "@/lib/format";
 import {
@@ -51,6 +57,14 @@ export default function MensajesPage() {
   const [enviando, setEnviando] = useState(false);
   const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
   const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false);
+  const [nuevosDestinatarios, setNuevosDestinatarios] = useState<
+    Array<{ usuarioId: number; label: string; rol: string }>
+  >([]);
+  const [nuevoDestinatarioId, setNuevoDestinatarioId] = useState("");
+  const [nuevoContenido, setNuevoContenido] = useState("");
+  const [enviandoNuevo, setEnviandoNuevo] = useState(false);
+  const [errorNuevo, setErrorNuevo] = useState<string | null>(null);
   const hiloRef = useRef<HTMLDivElement | null>(null);
 
   const cargar = useCallback(async () => {
@@ -212,6 +226,76 @@ export default function MensajesPage() {
     }
   };
 
+  const abrirNuevo = async () => {
+    setModalNuevoAbierto(true);
+    setErrorNuevo(null);
+    setNuevoDestinatarioId("");
+    setNuevoContenido("");
+    try {
+      const [maes, tus] = await Promise.all([listarMaestros(), listarTutores()]);
+      const opciones: Array<{ usuarioId: number; label: string; rol: string }> = [];
+      maes.forEach((m) => {
+        const nombre = [m.nombre, m.apellido].filter(Boolean).join(" ").trim();
+        opciones.push({
+          usuarioId: m.idUsuario ?? 0,
+          label: `Maestro · ${nombre || `Expediente #${m.id}`}`,
+          rol: "Maestro",
+        });
+      });
+      tus.forEach((t) => {
+        const u = t.usuario;
+        const uid = u?.id ?? null;
+        if (!uid) return;
+        const nombre = [u?.nombres, u?.apellidos].filter(Boolean).join(" ").trim();
+        opciones.push({
+          usuarioId: uid,
+          label: `Tutor · ${nombre || `Expediente #${t.id}`}`,
+          rol: "Tutor",
+        });
+      });
+      setNuevosDestinatarios(opciones);
+    } catch {
+      setNuevosDestinatarios([]);
+    }
+  };
+
+  const enviarNuevo = async () => {
+    const contenido = nuevoContenido.trim();
+    const destinatario =
+      nuevosDestinatarios.find((o) => o.usuarioId === Number(nuevoDestinatarioId)) ??
+      null;
+    if (!contenido || !destinatario || enviandoNuevo) return;
+    setEnviandoNuevo(true);
+    setErrorNuevo(null);
+    try {
+      const conversacion = await crearConversacion({
+        titulo: `Mensaje a ${destinatario.rol} · ${destinatario.label.split(" · ")[1] ?? destinatario.label}`,
+        tipo: "Privada",
+        estado: true,
+      });
+      await agregarParticipante({
+        conversacionId: conversacion.id,
+        usuarioId: destinatario.usuarioId,
+        rolEnConversacion: destinatario.rol,
+        activo: true,
+      });
+      const nuevo = await crearMensaje({
+        conversacionId: conversacion.id,
+        destinatarioUsuarioId: destinatario.usuarioId,
+        contenido,
+      });
+      setMensajes((prev) => [...prev, nuevo]);
+      setModalNuevoAbierto(false);
+      setNuevoContenido("");
+      setNuevoDestinatarioId("");
+      await cargar();
+    } catch (err) {
+      setErrorNuevo(mensajeDeError(err));
+    } finally {
+      setEnviandoNuevo(false);
+    }
+  };
+
   const etiquetaRemitente = (mensaje: Mensaje) => {
     if (mensaje.remitenteId === usuarioId) return "Tú";
     const participantesConv = participantesPorConversacion.get(
@@ -230,10 +314,16 @@ export default function MensajesPage() {
       titulo="Mensajes"
       subtitulo="Bandeja de conversaciones y mensajería interna del colegio"
       acciones={
-        <Button variant="outline" onClick={() => void cargar()} disabled={cargando}>
-          <RefreshIcon className="h-4 w-4" />
-          Actualizar
-        </Button>
+        <>
+          <Button variant="outline" onClick={() => void cargar()} disabled={cargando}>
+            <RefreshIcon className="h-4 w-4" />
+            Actualizar
+          </Button>
+          <Button variant="gradient" onClick={() => void abrirNuevo()}>
+            <SendIcon className="h-4 w-4" />
+            Nuevo mensaje
+          </Button>
+        </>
       }
     >
       <div className="space-y-6">
@@ -487,6 +577,60 @@ export default function MensajesPage() {
           </section>
         )}
       </div>
+
+      {/* Modal para nuevo mensaje a destinatario */}
+      <Modal
+        abierto={modalNuevoAbierto}
+        onCerrar={() => setModalNuevoAbierto(false)}
+        titulo="Nuevo mensaje"
+        descripcion="Manda un mensaje a un docente, tutor o director."
+      >
+        <div className="space-y-4">
+          {errorNuevo && <p className="text-sm text-red-600">{errorNuevo}</p>}
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold text-slate-700">Destinatario</p>
+            <Select
+              value={nuevoDestinatarioId}
+              onChange={(e) => setNuevoDestinatarioId(e.target.value)}
+              className="w-full"
+            >
+              <option value="">Seleccioná el destinatario…</option>
+              {nuevosDestinatarios.map((o) => (
+                <option key={`${o.usuarioId}-${o.rol}`} value={String(o.usuarioId)}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold text-slate-700">Mensaje</p>
+            <Textarea
+              placeholder="Escribí el mensaje…"
+              value={nuevoContenido}
+              onChange={(e) => setNuevoContenido(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setModalNuevoAbierto(false)}
+              disabled={enviandoNuevo}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="gradient"
+              onClick={() => void enviarNuevo()}
+              disabled={
+                !nuevoDestinatarioId || !nuevoContenido.trim() || enviandoNuevo
+              }
+            >
+              {enviandoNuevo ? "Enviando…" : "Enviar"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </AppShell>
   );
 }

@@ -36,6 +36,7 @@ import type {
   Seccion,
   Tarea,
   TareaRequest,
+  TutorResumen,
   Usuario,
 } from "@/lib/types";
 
@@ -114,6 +115,29 @@ export const listarConversaciones = () =>
 export const listarMensajes = () => obtener<Mensaje[]>("/mensajes");
 export const listarParticipantes = () =>
   obtener<ConversacionParticipante[]>("/conversacion-participantes");
+export const listarTutores = () => obtener<TutorResumen[]>("/tutores");
+
+export async function crearConversacion(payload: {
+  titulo: string;
+  tipo: string;
+  estado?: boolean;
+}): Promise<Conversacion> {
+  const { data } = await api.post<Conversacion>("/conversaciones", payload);
+  return data;
+}
+
+export async function agregarParticipante(payload: {
+  conversacionId: number;
+  usuarioId: number;
+  rolEnConversacion: string;
+  activo?: boolean;
+}): Promise<ConversacionParticipante> {
+  const { data } = await api.post<ConversacionParticipante>(
+    "/conversacion-participantes",
+    payload,
+  );
+  return data;
+}
 
 export async function crearMensaje(payload: {
   conversacionId: number;
