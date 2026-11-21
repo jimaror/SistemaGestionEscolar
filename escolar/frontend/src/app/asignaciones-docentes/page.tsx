@@ -161,21 +161,23 @@ export default function AsignacionesDocentesPage() {
     }
   };
 
-  // Construir mapa dia -> filaHorario -> texto de materia
+  // Construir mapa dia -> filaHorario -> texto de materia.
+  // Reparte las asignaciones asignadas en TODOS los bloques de clase de
+  // Lunes a Viernes, repitiendo la lista si es necesario para llenar el horario.
   const horario = useMemo(() => {
     const mapa: Record<string, Record<string, string>> = {};
     DIAS.forEach((d) => {
       mapa[d] = {};
       FILAS_HORARIO.forEach((f) => { mapa[d][f.clave] = ""; });
     });
-    // Distribuir las asignaciones de forma ordenada por los bloques de clase
     const bloquesClase = FILAS_HORARIO.filter((f) => f.tipo === "clase").map((f) => f.clave);
     const lista = [...asignaciones].sort((a, b) => a.asignaturaId - b.asignaturaId);
+    if (lista.length === 0) return mapa;
     let idx = 0;
+    const total = lista.length;
     for (const dia of DIAS) {
       for (const clave of bloquesClase) {
-        if (idx >= lista.length) break;
-        const a = lista[idx];
+        const a = lista[idx % total];
         const mat = asignaturasPorId.get(a.asignaturaId)?.nombre ?? "Materia";
         const m = maestrosPorId.get(a.maestroId);
         const nom = m ? `${m.nombre} ${m.apellido}`.trim() : "Maestro";
