@@ -100,7 +100,7 @@ export default function AsignacionesDocentesPage() {
     } finally {
       setCargando(false);
     }
-  }, [seccionSeleccionada, cargarAsignaciones]);
+  }, [seccionSeleccionada]);
 
   useEffect(() => {
     void cargarAsignaciones();
