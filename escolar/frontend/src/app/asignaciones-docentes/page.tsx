@@ -25,51 +25,38 @@ import type {
   Seccion,
 } from "@/lib/types";
 import { PlusIcon, TrashIcon, ClockIcon } from "@/components/icons";
-import { cn } from "@/lib/utils";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-const HORAS = [
-  "8:00 - 8:55",
-  "8:55 - 9:40",
-  "20° RECREO",
-  "10:45 - 11:30",
-  "11:30 - 12:15",
-  "40° COLOCACIÓN",
-  "13:50 - 14:35",
-  "14:35 - 15:20",
-  "5° RECREO",
-  "15:25 - 16:10",
+
+const FILAS_HORARIO = [
+  { clave: "h1", etiqueta: "8:00 - 8:55", tipo: "clase" },
+  { clave: "h2", etiqueta: "8:55 - 9:40", tipo: "clase" },
+  { clave: "rec1", etiqueta: "20° RECREO", tipo: "recreo" },
+  { clave: "h3", etiqueta: "10:00 - 10:45", tipo: "clase" },
+  { clave: "h4", etiqueta: "10:45 - 11:30", tipo: "clase" },
+  { clave: "h5", etiqueta: "11:30 - 12:15", tipo: "clase" },
+  { clave: "col", etiqueta: "40° COLOCACIÓN", tipo: "colocacion" },
+  { clave: "h6", etiqueta: "13:50 - 14:35", tipo: "clase" },
+  { clave: "h7", etiqueta: "14:35 - 15:20", tipo: "clase" },
+  { clave: "rec2", etiqueta: "5° RECREO", tipo: "recreo" },
+  { clave: "h8", etiqueta: "15:25 - 16:10", tipo: "clase" },
 ];
 
 const colorClase = (nombre: string) => {
   const n = nombre.toLowerCase();
   if (n.includes("lengua")) return "bg-indigo-100 border-indigo-200 text-indigo-800";
   if (n.includes("matem")) return "bg-fuchsia-100 border-fuchsia-200 text-fuchsia-800";
-  if (
-    n.includes("ciencias") ||
-    n.includes("biología") ||
-    n.includes("biologia")
-  )
-    return "bg-emerald-100 border-emerald-200 text-emerald-800";
-  if (n.includes("social") || n.includes("conviv") || n.includes("civismo"))
-    return "bg-amber-100 border-amber-200 text-amber-800";
+  if (n.includes("ciencias") || n.includes("biología") || n.includes("biologia")) return "bg-emerald-100 border-emerald-200 text-emerald-800";
+  if (n.includes("social") || n.includes("conviv") || n.includes("civismo")) return "bg-amber-100 border-amber-200 text-amber-800";
   if (n.includes("ingl")) return "bg-blue-100 border-blue-200 text-blue-800";
   if (n.includes("geograf")) return "bg-teal-100 border-teal-200 text-teal-800";
   if (n.includes("historia")) return "bg-violet-100 border-violet-200 text-violet-800";
-  if (n.includes("física") || n.includes("fisica"))
-    return "bg-cyan-100 border-cyan-200 text-cyan-800";
-  if (n.includes("química") || n.includes("quimica"))
-    return "bg-rose-100 border-rose-200 text-rose-800";
+  if (n.includes("física") || n.includes("fisica")) return "bg-cyan-100 border-cyan-200 text-cyan-800";
+  if (n.includes("química") || n.includes("quimica")) return "bg-rose-100 border-rose-200 text-rose-800";
   if (n.includes("inform")) return "bg-purple-100 border-purple-200 text-purple-800";
-  if (n.includes("educación física") || n.includes("educacion fisica"))
-    return "bg-orange-100 border-orange-200 text-orange-800";
-  if (n.includes("educación artística") || n.includes("educacion artistica"))
-    return "bg-lime-100 border-lime-200 text-lime-800";
+  if (n.includes("educación física") || n.includes("educacion fisica")) return "bg-orange-100 border-orange-200 text-orange-800";
+  if (n.includes("educación artística") || n.includes("educacion artistica")) return "bg-lime-100 border-lime-200 text-lime-800";
   return "bg-slate-100 border-slate-200 text-slate-800";
-};
-
-const estaVacio = (dia: string, hora: string) => {
-  return hora.includes("RECREO") || hora.includes("COLOCACIÓN");
 };
 
 export default function AsignacionesDocentesPage() {
@@ -79,9 +66,7 @@ export default function AsignacionesDocentesPage() {
   const [asignaciones, setAsignaciones] = useState<AsignacionDocente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [seccionSeleccionada, setSeccionSeleccionada] = useState<number | null>(
-    null,
-  );
+  const [seccionSeleccionada, setSeccionSeleccionada] = useState<number | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [eliminandoId, setEliminandoId] = useState<number | null>(null);
 
@@ -175,27 +160,29 @@ export default function AsignacionesDocentesPage() {
     }
   };
 
+  // Construir mapa dia -> filaHorario -> texto de materia
   const horario = useMemo(() => {
-    const grid: Record<string, Record<string, string>> = {};
+    const mapa: Record<string, Record<string, string>> = {};
     DIAS.forEach((d) => {
-      grid[d] = {};
-      HORAS.forEach((h) => { grid[d][h] = ""; });
+      mapa[d] = {};
+      FILAS_HORARIO.forEach((f) => { mapa[d][f.clave] = ""; });
     });
+    // Distribuir las asignaciones de forma ordenada por los bloques de clase
+    const bloquesClase = FILAS_HORARIO.filter((f) => f.tipo === "clase").map((f) => f.clave);
     const lista = [...asignaciones].sort((a, b) => a.asignaturaId - b.asignaturaId);
     let idx = 0;
     for (const dia of DIAS) {
-      for (const hora of HORAS) {
+      for (const clave of bloquesClase) {
         if (idx >= lista.length) break;
-        if (estaVacio(dia, hora)) continue;
         const a = lista[idx];
         const mat = asignaturasPorId.get(a.asignaturaId)?.nombre ?? "Materia";
         const m = maestrosPorId.get(a.maestroId);
         const nom = m ? `${m.nombre} ${m.apellido}`.trim() : "Maestro";
-        grid[dia][hora] = `${mat} — ${nom}`;
+        mapa[dia][clave] = `${mat} — ${nom}`;
         idx++;
       }
     }
-    return grid;
+    return mapa;
   }, [asignaciones, asignaturasPorId, maestrosPorId]);
 
   if (cargando) {
@@ -314,11 +301,12 @@ export default function AsignacionesDocentesPage() {
                             {a.horasSemanales ?? "-"} horas / semana
                           </p>
                           <Button
-                            variant="destructive"
+                            variant="outline"
                             size="icon"
                             onClick={() => eliminar(a.id)}
                             disabled={eliminandoId === a.id}
-                            className="h-8 w-8 p-0 text-xs hover:bg-red-50"
+                            className="h-8 w-8 p-0 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 border-red-100"
+                            title="Eliminar materia"
                           >
                             {eliminandoId === a.id ? "…" : <TrashIcon className="h-4 w-4" />}
                           </Button>
@@ -418,10 +406,11 @@ export default function AsignacionesDocentesPage() {
               </div>
             </section>
 
-            {/* HORARIO SEMANAL - Estilo del ejemplo */}
+            {/* HORARIO SEMANAL - Estilo ejemplo: Lunes a Viernes, filas por hora */}
             <section className="rounded-3xl border border-indigo-200 bg-indigo-50 shadow-sm overflow-hidden">
               <div className="border-b border-indigo-100 bg-indigo-100 px-6 py-4">
                 <div className="flex items-center gap-2">
+                  <ClockIcon className="h-5 w-5 text-indigo-600" />
                   <span className="text-indigo-900 font-bold text-xs uppercase tracking-wider">
                     Horario de Clase
                   </span>
@@ -448,28 +437,36 @@ export default function AsignacionesDocentesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-indigo-100">
-                    {HORAS.map((hora) => {
-                      const esVacia = estaVacio("", hora);
+                    {FILAS_HORARIO.map((fila) => {
+                      const esEspecial = fila.tipo !== "clase";
                       return (
-                        <tr key={hora} className="hover:bg-indigo-50/40 transition">
-                          <td className="px-4 py-3 text-[10px] font-semibold text-indigo-700 border-b border-indigo-100 whitespace-nowrap bg-indigo-50/60">
-                            {hora}
+                        <tr key={fila.clave} className="hover:bg-indigo-50/30 transition">
+                          <td className="px-4 py-3 text-[10px] font-semibold text-indigo-700 border-b border-indigo-100 whitespace-nowrap bg-indigo-50/40">
+                            {fila.etiqueta}
                           </td>
-                          {DIAS.map((dia) => (
-                            <td
-                              key={dia}
-                              className={cn(
-                                "px-4 py-3 text-[10px] border-b border-indigo-100 text-center rounded-lg",
-                                esVacia
-                                  ? "bg-indigo-50 text-indigo-200 italic font-light"
-                                  : horario[dia][hora]
-                                    ? "bg-white text-slate-800 font-medium shadow-sm"
-                                    : "bg-indigo-50 text-indigo-300 italic"
-                              )}
-                            >
-                              {esVacia ? "—" : horario[dia][hora] || "—"}
-                            </td>
-                          ))}
+                          {DIAS.map((dia) => {
+                            const contenido = horario[dia][fila.clave];
+                            const tieneContenido = contenido && contenido.trim() !== "";
+                            return (
+                              <td
+                                key={dia}
+                                className={cn(
+                                  "px-4 py-3 text-[10px] border-b border-indigo-100 text-center rounded-lg",
+                                  esEspecial
+                                    ? "bg-indigo-50 text-indigo-300 italic font-light"
+                                    : tieneContenido
+                                      ? "bg-white text-slate-800 font-medium shadow-sm"
+                                      : "bg-indigo-50 text-indigo-200"
+                                )}
+                              >
+                                {esEspecial
+                                  ? fila.etiqueta
+                                  : tieneContenido
+                                    ? contenido
+                                    : "—"}
+                              </td>
+                            );
+                          })}
                         </tr>
                       );
                     })}
