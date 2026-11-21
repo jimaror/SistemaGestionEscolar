@@ -177,14 +177,15 @@ export default function AsignacionesDocentesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="relative w-full sm:max-w-md">
                 <Label htmlFor="seccionSelect">Sección (Grado · Sección · Turno)</Label>
-                <Select
+                <select
                   id="seccionSelect"
-                  value={seccionSeleccionada ?? ""}
-                  onValueChange={(value) => {
+                  value={String(seccionSeleccionada ?? "")}
+                  onChange={(e) => {
                     setSeccionSeleccionada(
-                      value === "" ? null : Number(value),
+                      e.target.value === "" ? null : Number(e.target.value),
                     );
                   }}
+                  className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
                 >
                   <option value="">Seleccioná una sección…</option>
                   {secciones
@@ -200,7 +201,7 @@ export default function AsignacionesDocentesPage() {
                         {`${s.grado?.nombre ?? "Grado"} · ${s.nombre} · ${s.turno}`}
                       </option>
                     ))}
-                </Select>
+                </select>
               </div>
             </div>
 
@@ -308,12 +309,13 @@ export default function AsignacionesDocentesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                   <div className="col-span-1 sm:col-span-2">
                     <Label htmlFor="maestroSelect">Maestro</Label>
-                    <Select
+                    <select
                       id="maestroSelect"
-                      value={form.maestroId}
-                      onValueChange={(value) =>
-                        setForm({ ...form, maestroId: value })
+                      value={String(form.maestroId ?? "")}
+                      onChange={(e) =>
+                        setForm({ ...form, maestroId: e.target.value })
                       }
+                      className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
                     >
                       <option value="">Seleccioná un maestro…</option>
                       {maestros.map((m) => (
@@ -321,16 +323,17 @@ export default function AsignacionesDocentesPage() {
                           {`${m.nombre} ${m.apellido}`}
                         </option>
                       ))}
-                    </Select>
+                    </select>
                   </div>
                   <div className="col-span-1 sm:col-span-2">
                     <Label htmlFor="asignaturaSelect">Materia</Label>
-                    <Select
+                    <select
                       id="asignaturaSelect"
-                      value={form.asignaturaId}
-                      onValueChange={(value) =>
-                        setForm({ ...form, asignaturaId: value })
+                      value={String(form.asignaturaId ?? "")}
+                      onChange={(e) =>
+                        setForm({ ...form, asignaturaId: e.target.value })
                       }
+                      className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
                     >
                       <option value="">Seleccioná una materia…</option>
                       {asignaturas.map((a) => (
@@ -338,7 +341,7 @@ export default function AsignacionesDocentesPage() {
                           {a.nombre}
                         </option>
                       ))}
-                    </Select>
+                    </select>
                   </div>
                   <div>
                     <Label htmlFor="horasInput">Horas semanales</Label>
