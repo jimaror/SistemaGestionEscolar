@@ -31,8 +31,10 @@ api.interceptors.request.use((config) => {
 });
 
 // Si el servidor gratuito está arrancando (502/503/504) o la red falla un
-// instante, reintenta las consultas GET. No reintentamos POST/PUT/DELETE
-// para no duplicar datos.
+// instante, reintenta las peticiones. Para POST/PUT/DELETE también reintentamos
+// cuando el servidor está arrancando (5xx) o hay falla de red, porque el usuario
+// está haciendo una acción consciente y prefiere que se complete a fallar silente.
+// No reintentamos si ya devolvió un error claro del backend (4xx).
 api.interceptors.response.use(
   (respuesta) => respuesta,
   async (error) => {
@@ -46,7 +48,13 @@ api.interceptors.response.use(
     const metodo = (config?.method ?? "get").toLowerCase();
     const intentos = config?.__reintentos ?? 0;
 
-    if (config && metodo === "get" && reintentable && intentos < 2) {
+    if (
+      config &&
+      reintentable &&
+      intentos < 2 &&
+      // Si el backend ya respondió con un error del cliente (4xx), no reintentamos.
+      !(status && status >= 400 && status < 500)
+    ) {
       config.__reintentos = intentos + 1;
       await esperar(ESPERA_REINTENTO_MS * config.__reintentos);
       return api.request(config);
