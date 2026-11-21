@@ -285,6 +285,7 @@ export default function AsistenciasPage() {
   }, [diaSeleccionado, filas]);
 
   const esAlumno = rol === "Alumno";
+  const esTutor = rol === "Tutor";
   const puedeGestionar = rol === "Director" || rol === "Maestro";
 
   // Opciones para los selects del formulario
@@ -418,11 +419,13 @@ export default function AsistenciasPage() {
 
   return (
     <AppShell
-      titulo={esAlumno ? "Mi asistencia" : "Asistencias"}
+      titulo={esAlumno ? "Mi asistencia" : esTutor ? "Asistencia de mis hijos" : "Asistencias"}
       subtitulo={
         esAlumno
-          ? "Registro de asistencia de tu expediente"
-          : "Control diario de asistencia por estudiante"
+          ? "Aquí solo ves tus propias asistencias e inasistencias."
+          : esTutor
+            ? "Aquí solo ves las asistencias e inasistencias de tus hijos."
+            : "Control diario de asistencia por estudiante"
       }
       acciones={
         <>
@@ -724,8 +727,10 @@ export default function AsistenciasPage() {
                   <Input
                     placeholder={
                       esAlumno
-                        ? "Buscar por estado o fecha…"
-                        : "Buscar estudiante o sección…"
+                        ? "Buscar por estado, fecha u observación…"
+                        : esTutor
+                          ? "Buscar por hijo, estado o fecha…"
+                          : "Buscar estudiante o sección…"
                     }
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}

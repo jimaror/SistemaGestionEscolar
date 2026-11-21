@@ -30,14 +30,28 @@ public class SincronizadorSecuencias {
     @Transactional
     public void sincronizar() {
         List<Tabla> tablas = List.of(
-                new Tabla("mensajes", "id_mensaje"),
-                new Tabla("conversaciones", "id_conversacion"),
-                new Tabla("conversacion_participantes", "id_participante"),
+                new Tabla("usuarios", "id_usuario"),
+                new Tabla("alumnos", "id_alumno"),
+                new Tabla("maestros", "id_maestro"),
+                new Tabla("tutores", "id_tutor"),
+                new Tabla("grados", "id_grado"),
+                new Tabla("secciones", "id_seccion"),
+                new Tabla("anios_escolares", "id_anio"),
+                new Tabla("asignaturas", "id_asignatura"),
+                new Tabla("asignaciones_docentes", "id_asignacion"),
+                new Tabla("matriculas", "id_matricula"),
+                new Tabla("asistencias", "id_asistencia"),
+                new Tabla("evaluaciones", "id_evaluacion"),
+                new Tabla("notas", "id_nota"),
                 new Tabla("materiales", "id_material"),
-                new Tabla("reuniones", "id_reunion"),
-                new Tabla("reunion_participantes", "id_participante"),
                 new Tabla("tareas", "id_tarea"),
                 new Tabla("entregas_tareas", "id_entrega"),
+                new Tabla("justificaciones_ausencia", "id_justificacion"),
+                new Tabla("conversaciones", "id_conversacion"),
+                new Tabla("conversacion_participantes", "id_participante"),
+                new Tabla("mensajes", "id_mensaje"),
+                new Tabla("reuniones", "id_reunion"),
+                new Tabla("reunion_participantes", "id_participante"),
                 new Tabla("notificaciones", "id_notificacion")
         );
 
