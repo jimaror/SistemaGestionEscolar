@@ -65,23 +65,6 @@ const colorClase = (nombre: string) => {
   return "bg-slate-100 border-slate-200 text-slate-800";
 };
 
-const colorClase = (nombre: string) => {
-  const n = nombre.toLowerCase();
-  if (n.includes("lengua")) return "bg-indigo-100 border-indigo-200 text-indigo-800";
-  if (n.includes("matem")) return "bg-fuchsia-100 border-fuchsia-200 text-fuchsia-800";
-  if (n.includes("ciencias") || n.includes("biología") || n.includes("biologia")) return "bg-emerald-100 border-emerald-200 text-emerald-800";
-  if (n.includes("social") || n.includes("conviv") || n.includes("civismo")) return "bg-amber-100 border-amber-200 text-amber-800";
-  if (n.includes("ingl")) return "bg-blue-100 border-blue-200 text-blue-800";
-  if (n.includes("geograf")) return "bg-teal-100 border-teal-200 text-teal-800";
-  if (n.includes("historia")) return "bg-violet-100 border-violet-200 text-violet-800";
-  if (n.includes("física") || n.includes("fisica")) return "bg-cyan-100 border-cyan-200 text-cyan-800";
-  if (n.includes("química") || n.includes("quimica")) return "bg-rose-100 border-rose-200 text-rose-800";
-  if (n.includes("inform")) return "bg-purple-100 border-purple-200 text-purple-800";
-  if (n.includes("educación física") || n.includes("educacion fisica")) return "bg-orange-100 border-orange-200 text-orange-800";
-  if (n.includes("educación artística") || n.includes("educacion artistica")) return "bg-lime-100 border-lime-200 text-lime-800";
-  return "bg-slate-100 border-slate-200 text-slate-800";
-};
-
 export default function AsignacionesDocentesPage() {
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [maestros, setMaestros] = useState<MaestroResumen[]>([]);
