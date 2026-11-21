@@ -15,6 +15,7 @@ import {
   CalendarIcon,
   CheckCircleIcon,
   ClipboardIcon,
+  ClockIcon,
   FileTextIcon,
   FolderIcon,
   HomeIcon,

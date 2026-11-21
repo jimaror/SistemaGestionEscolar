@@ -145,6 +145,7 @@ export interface GradoResumen {
 
 export interface MaestroResumen {
   id: number;
+  idUsuario: number | null;
   nombre: string;
   apellido: string;
   especialidad: string | null;
