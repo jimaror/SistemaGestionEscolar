@@ -153,6 +153,54 @@ export default function MensajesPage() {
     [mensajesPorConversacion, seleccionada]
   );
 
+  // Los participantes traen el nombre real del usuario. Se usa para resolver
+  // quien envia y quien recibe cada mensaje, sin depender del rol en la
+  // conversacion (que suele decir solo "Participante").
+  const personasPorId = useMemo(() => {
+    const mapa = new Map<number, { nombre: string; rol: string | null }>();
+    participantes.forEach((p) => {
+      if (!p.usuarioId) return;
+      const nombre = [p.usuarioNombre, p.usuarioApellidos]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (nombre || !mapa.has(p.usuarioId)) {
+        mapa.set(p.usuarioId, {
+          nombre: nombre || `Usuario #${p.usuarioId}`,
+          rol: p.usuarioRol ?? null,
+        });
+      }
+    });
+    maestros.forEach((m) => {
+      if (!m.idUsuario) return;
+      const nombre = [m.nombre, m.apellido].filter(Boolean).join(" ").trim();
+      if (nombre) mapa.set(m.idUsuario, { nombre, rol: "Maestro" });
+    });
+    return mapa;
+  }, [participantes, maestros]);
+
+  const nombreDe = useCallback(
+    (id: number | null | undefined) => {
+      if (!id) return "—";
+      if (id === usuarioId) return "Tú";
+      return personasPorId.get(id)?.nombre ?? `Usuario #${id}`;
+    },
+    [personasPorId, usuarioId],
+  );
+
+  const destinatariosActuales = useMemo(() => {
+    if (!seleccionada) return [] as Array<{ usuarioId: number; nombre: string }>;
+    const participantesConv = participantesPorConversacion.get(seleccionada) ?? [];
+    const otros = participantesConv.filter((p) => p.usuarioId !== usuarioId);
+    const relevantes = otros.length ? otros : participantesConv;
+    return relevantes
+      .filter((p) => p.usuarioId)
+      .map((p) => ({
+        usuarioId: p.usuarioId as number,
+        nombre: nombreDe(p.usuarioId),
+      }));
+  }, [participantesPorConversacion, seleccionada, usuarioId, nombreDe]);
+
   const destinatarioActual = useMemo(() => {
     if (!seleccionada) return null;
     const participantesConv = participantesPorConversacion.get(seleccionada) ?? [];
@@ -162,15 +210,23 @@ export default function MensajesPage() {
       participantesConv[0] ??
       null;
     if (!destinatario) return null;
-    const maestro = maestros.find((m) => m.idUsuario === destinatario.usuarioId);
-    const nombreMaestro = maestro ? `${maestro.nombre} ${maestro.apellido}`.trim() : null;
-    const nombreParticipante =
-      [destinatario.usuarioNombre, destinatario.usuarioApellidos]
-        .filter(Boolean)
-        .join(" ")
-        .trim() || nombreMaestro;
-    return { ...destinatario, nombre: nombreParticipante };
-  }, [participantesPorConversacion, seleccionada, usuarioId, maestros]);
+    return { ...destinatario, nombre: nombreDe(destinatario.usuarioId) };
+  }, [participantesPorConversacion, seleccionada, usuarioId, nombreDe]);
+
+  // Para mensajes antiguos que no guardaron el destinatario, se infiere de los
+  // demas participantes de la conversacion (excluyendo a quien escribio).
+  const destinatariosDeMensaje = useCallback(
+    (mensaje: Mensaje): string => {
+      if (mensaje.destinatarioUsuarioId) {
+        return nombreDe(mensaje.destinatarioUsuarioId);
+      }
+      const otros = (participantesPorConversacion.get(mensaje.conversacionId) ?? [])
+        .filter((p) => p.usuarioId && p.usuarioId !== mensaje.remitenteId)
+        .map((p) => nombreDe(p.usuarioId));
+      return otros.length ? [...new Set(otros)].join(", ") : "Participantes";
+    },
+    [participantesPorConversacion, nombreDe],
+  );
 
   const filtradas = useMemo(() => {
     const q = normalizar(busqueda);
@@ -210,12 +266,16 @@ export default function MensajesPage() {
     setEnviando(true);
     setErrorEnvio(null);
     try {
-      const destinatarioParticipante =
-        destinatarioActual ??
-        (participantesPorConversacion.get(seleccionada) ?? [])[0] ??
-        null;
+      // Responder al ultimo remitente ajeno; si no hay, al primer participante.
+      const ultimoAjeno = [...hilo]
+        .reverse()
+        .find((m) => m.remitenteId && m.remitenteId !== usuarioId);
       const destinatarioUsuarioId =
-        destinatarioParticipante?.usuarioId ?? usuarioId ?? 0;
+        ultimoAjeno?.remitenteId ??
+        destinatarioActual?.usuarioId ??
+        destinatariosActuales[0]?.usuarioId ??
+        usuarioId ??
+        0;
       const nuevo = await crearMensaje({
         conversacionId: seleccionada,
         destinatarioUsuarioId,
@@ -371,18 +431,8 @@ export default function MensajesPage() {
     }
   };
 
-  const etiquetaRemitente = (mensaje: Mensaje) => {
-    if (mensaje.remitenteId === usuarioId) return "Tú";
-    const participantesConv = participantesPorConversacion.get(
-      mensaje.conversacionId
-    ) ?? [];
-    const participante = participantesConv.find(
-      (p) => p.usuarioId === mensaje.remitenteId
-    );
-    return participante?.rolEnConversacion
-      ? `${participante.rolEnConversacion}`
-      : `Participante #${mensaje.remitenteId ?? "—"}`;
-  };
+  const etiquetaRemitente = (mensaje: Mensaje) =>
+    `${nombreDe(mensaje.remitenteId)}  →  ${destinatariosDeMensaje(mensaje)}`;
 
   return (
     <AppShell
@@ -502,7 +552,7 @@ export default function MensajesPage() {
                               </div>
                               <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
                                 {ultimo
-                                  ? `${ultimo.remitenteId === usuarioId ? "Tú: " : ""}${ultimo.contenido}`
+                                  ? `${nombreDe(ultimo.remitenteId)}: ${ultimo.contenido}`
                                   : "Sin mensajes todavía"}
                               </p>
                               <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
@@ -535,13 +585,11 @@ export default function MensajesPage() {
                       <p className="text-xs text-slate-500">
                         Creada el {formatearFechaHora(conversacionActual.fechaCreacion)}
                       </p>
-                      {destinatarioActual && (
+                      {destinatariosActuales.length > 0 && (
                         <p className="mt-0.5 text-xs text-slate-500">
                           Dirigido a:{" "}
                           <span className="font-semibold text-slate-700">
-                            {destinatarioActual.nombre ??
-                              destinatarioActual.rolEnConversacion ??
-                              `Participante #${destinatarioActual.usuarioId ?? "—"}`}
+                            {destinatariosActuales.map((d) => d.nombre).join(", ")}
                           </span>
                         </p>
                       )}

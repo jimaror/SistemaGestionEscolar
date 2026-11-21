@@ -40,10 +40,23 @@ public class ConversacionParticipanteMapper {
                 entidad.getUsuario() == null ? null : entidad.getUsuario().getNombres());
         respuesta.setUsuarioApellidos(
                 entidad.getUsuario() == null ? null : entidad.getUsuario().getApellidos());
+        // El campo legacy "rol" puede venir vacio en usuarios creados desde la
+        // API. La relacion real es rolId (1=Director, 2=Maestro, ...).
         respuesta.setUsuarioRol(
-                entidad.getUsuario() == null ? null : entidad.getUsuario().getRol());
+                entidad.getUsuario() == null ? null : nombreRol(entidad.getUsuario().getRolId()));
         respuesta.setFechaUltimaLectura(entidad.getFechaUltimaLectura());
         respuesta.setActivo(entidad.getActivo());
         return respuesta;
+    }
+
+    private String nombreRol(Byte rolId) {
+        if (rolId == null) return null;
+        return switch (rolId) {
+            case 1 -> "Director";
+            case 2 -> "Maestro";
+            case 3 -> "Alumno";
+            case 4 -> "Tutor";
+            default -> null;
+        };
     }
 }
