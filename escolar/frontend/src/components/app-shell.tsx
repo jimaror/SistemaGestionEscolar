@@ -140,6 +140,12 @@ const GRUPOS_NAV: NavGroup[] = [
         icon: FolderIcon,
         roles: [...PERMISOS.asignacionesDocentes],
       },
+      {
+        nombre: "Mi Horario",
+        href: "/horario-docente",
+        icon: ClockIcon,
+        roles: [...PERMISOS.horarioDocente],
+      },
     ],
   },
 ];
