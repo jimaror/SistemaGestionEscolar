@@ -43,8 +43,9 @@ public class AsistenciaService {
                         "Asistencia con ID " + id + " no encontrado"));
     }
 
-    public AsistenciaRespuesta guardar(AsistenciaCrearRequest solicitud) {
+    public AsistenciaRespuesta guardar(AsistenciaCrearRequest solicitud, Integer registradoPorId) {
         Asistencia entidad = mapper.aEntidad(solicitud);
+        entidad.setRegistradoPorId(registradoPorId);
         return mapper.aRespuesta(repositorio.save(entidad));
     }
 

@@ -57,7 +57,8 @@ public class AsistenciaController {
     public ResponseEntity<AsistenciaRespuesta> guardar(
             @Valid @RequestBody AsistenciaCrearRequest solicitud) {
         acceso.exigirGestionAsistencia(solicitud.getAsignacionDocenteId());
-        return new ResponseEntity<>(servicio.guardar(solicitud), HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                servicio.guardar(solicitud, acceso.usuarioId()), HttpStatus.CREATED);
     }
 
     /**
