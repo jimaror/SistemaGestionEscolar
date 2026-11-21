@@ -29,15 +29,17 @@ import { cn } from "@/lib/utils";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
-// Horario real de Nicaragua: mañana 8:00-12:00, tarde 1:00-5:00
-const FILAS_HORARIO = [
+// Bloques de horario matutino (8:00 - 12:00) y vespertino (1:00 - 5:00)
+const BLOQUES_MATUTINO = [
   { clave: "h1", etiqueta: "8:00 - 8:45", tipo: "clase" },
   { clave: "h2", etiqueta: "8:45 - 9:30", tipo: "clase" },
   { clave: "rec1", etiqueta: "RECREO", tipo: "recreo" },
   { clave: "h3", etiqueta: "9:45 - 10:30", tipo: "clase" },
   { clave: "h4", etiqueta: "10:30 - 11:15", tipo: "clase" },
   { clave: "h5", etiqueta: "11:15 - 12:00", tipo: "clase" },
-  { clave: "col", etiqueta: "ALMUERZO", tipo: "colocacion" },
+];
+
+const BLOQUES_VESPERTINO = [
   { clave: "h6", etiqueta: "1:00 - 1:45", tipo: "clase" },
   { clave: "h7", etiqueta: "1:45 - 2:30", tipo: "clase" },
   { clave: "rec2", etiqueta: "RECREO", tipo: "recreo" },
@@ -45,6 +47,23 @@ const FILAS_HORARIO = [
   { clave: "h9", etiqueta: "3:30 - 4:15", tipo: "clase" },
   { clave: "h10", etiqueta: "4:15 - 5:00", tipo: "clase" },
 ];
+
+const colorClase = (nombre: string) => {
+  const n = nombre.toLowerCase();
+  if (n.includes("lengua")) return "bg-indigo-100 border-indigo-200 text-indigo-800";
+  if (n.includes("matem")) return "bg-fuchsia-100 border-fuchsia-200 text-fuchsia-800";
+  if (n.includes("ciencias") || n.includes("biología") || n.includes("biologia")) return "bg-emerald-100 border-emerald-200 text-emerald-800";
+  if (n.includes("social") || n.includes("conviv") || n.includes("civismo")) return "bg-amber-100 border-amber-200 text-amber-800";
+  if (n.includes("ingl")) return "bg-blue-100 border-blue-200 text-blue-800";
+  if (n.includes("geograf")) return "bg-teal-100 border-teal-200 text-teal-800";
+  if (n.includes("historia")) return "bg-violet-100 border-violet-200 text-violet-800";
+  if (n.includes("física") || n.includes("fisica")) return "bg-cyan-100 border-cyan-200 text-cyan-800";
+  if (n.includes("química") || n.includes("quimica")) return "bg-rose-100 border-rose-200 text-rose-800";
+  if (n.includes("inform")) return "bg-purple-100 border-purple-200 text-purple-800";
+  if (n.includes("educación física") || n.includes("educacion fisica")) return "bg-orange-100 border-orange-200 text-orange-800";
+  if (n.includes("educación artística") || n.includes("educacion artistica")) return "bg-lime-100 border-lime-200 text-lime-800";
+  return "bg-slate-100 border-slate-200 text-slate-800";
+};
 
 const colorClase = (nombre: string) => {
   const n = nombre.toLowerCase();
@@ -164,16 +183,15 @@ export default function AsignacionesDocentesPage() {
     }
   };
 
-  // Construir mapa dia -> filaHorario -> texto de materia.
-  // Reparte las asignaciones asignadas en TODOS los bloques de clase de
-  // Lunes a Viernes, repitiendo la lista si es necesario para llenar el horario.
-  const horario = useMemo(() => {
+  // Construir mapas separados para turno matutino y vespertino.
+  // Reparte las asignaciones en todos los bloques de cada turno.
+  const construirTurno = useCallback((bloques: typeof BLOQUES_MATUTINO) => {
     const mapa: Record<string, Record<string, string>> = {};
     DIAS.forEach((d) => {
       mapa[d] = {};
-      FILAS_HORARIO.forEach((f) => { mapa[d][f.clave] = ""; });
+      bloques.forEach((f) => { mapa[d][f.clave] = ""; });
     });
-    const bloquesClase = FILAS_HORARIO.filter((f) => f.tipo === "clase").map((f) => f.clave);
+    const bloquesClase = bloques.filter((f) => f.tipo === "clase").map((f) => f.clave);
     const lista = [...asignaciones].sort((a, b) => a.asignaturaId - b.asignaturaId);
     if (lista.length === 0) return mapa;
     let idx = 0;
@@ -190,6 +208,9 @@ export default function AsignacionesDocentesPage() {
     }
     return mapa;
   }, [asignaciones, asignaturasPorId, maestrosPorId]);
+
+  const horarioMatutino = useMemo(() => construirTurno(BLOQUES_MATUTINO), [construirTurno]);
+  const horarioVespertino = useMemo(() => construirTurno(BLOQUES_VESPERTINO), [construirTurno]);
 
   if (cargando) {
     return (
@@ -412,76 +433,148 @@ export default function AsignacionesDocentesPage() {
               </div>
             </section>
 
-            {/* HORARIO SEMANAL - Estilo ejemplo: Lunes a Viernes, filas por hora */}
-            <section className="rounded-3xl border border-indigo-200 bg-indigo-50 shadow-sm overflow-hidden">
-              <div className="border-b border-indigo-100 bg-indigo-100 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <ClockIcon className="h-5 w-5 text-indigo-600" />
-                  <span className="text-indigo-900 font-bold text-xs uppercase tracking-wider">
-                    Horario de Clase
-                  </span>
+            {/* HORARIO MATUTINO Y VESPERTINO - Separados */}
+            <section className="space-y-6">
+              {/* Turno Matutino */}
+              <section className="rounded-3xl border border-emerald-200 bg-emerald-50 shadow-sm overflow-hidden">
+                <div className="border-b border-emerald-100 bg-emerald-100 px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <ClockIcon className="h-5 w-5 text-emerald-600" />
+                    <span className="text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                      Turno Matutino · 8:00 - 12:00
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-600 mt-1">
+                    Vista sugerida de la distribución matutina de esta sección.
+                  </p>
                 </div>
-                <p className="text-xs text-indigo-600 mt-1">
-                  Vista sugerida de la distribución semanal de esta sección.
-                </p>
-              </div>
-              <div className="p-4 overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-[10px] font-bold text-indigo-600 uppercase tracking-wider text-left border-b border-indigo-200 bg-indigo-100 sticky top-0 z-10">
-                        Horas
-                      </th>
-                      {DIAS.map((dia) => (
-                        <th
-                          key={dia}
-                          className="px-4 py-3 text-[10px] font-bold text-indigo-600 uppercase tracking-wider text-center border-b border-indigo-200 bg-indigo-100 sticky top-0 z-10"
-                        >
-                          {dia}
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-left border-b border-emerald-200 bg-emerald-100 sticky top-0 z-10">
+                          Horas
                         </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-indigo-100">
-                    {FILAS_HORARIO.map((fila) => {
-                      const esEspecial = fila.tipo !== "clase";
-                      return (
-                        <tr key={fila.clave} className="hover:bg-indigo-50/30 transition">
-                          <td className="px-4 py-3 text-[10px] font-semibold text-indigo-700 border-b border-indigo-100 whitespace-nowrap bg-indigo-50/40">
-                            {fila.etiqueta}
-                          </td>
-                          {DIAS.map((dia) => {
-                            const contenido = horario[dia][fila.clave];
-                            const tieneContenido = contenido && contenido.trim() !== "";
-                            return (
-                              <td
-                                key={dia}
-                                className={cn(
-                                  "px-4 py-3 text-[10px] border-b border-indigo-100 text-center rounded-lg",
-                                  esEspecial
-                                    ? "bg-indigo-50 text-indigo-300 italic font-light"
+                        {DIAS.map((dia) => (
+                          <th
+                            key={dia}
+                            className="px-4 py-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-center border-b border-emerald-200 bg-emerald-100 sticky top-0 z-10"
+                          >
+                            {dia}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-100">
+                      {BLOQUES_MATUTINO.map((fila) => {
+                        const esEspecial = fila.tipo !== "clase";
+                        return (
+                          <tr key={fila.clave} className="hover:bg-emerald-50/30 transition">
+                            <td className="px-4 py-3 text-[10px] font-semibold text-emerald-700 border-b border-emerald-100 whitespace-nowrap bg-emerald-50/40">
+                              {fila.etiqueta}
+                            </td>
+                            {DIAS.map((dia) => {
+                              const contenido = horarioMatutino[dia][fila.clave];
+                              const tieneContenido = contenido && contenido.trim() !== "";
+                              return (
+                                <td
+                                  key={dia}
+                                  className={cn(
+                                    "px-4 py-3 text-[10px] border-b border-emerald-100 text-center rounded-lg",
+                                    esEspecial
+                                      ? "bg-emerald-50 text-emerald-300 italic font-light"
+                                      : tieneContenido
+                                        ? "bg-white text-slate-800 font-medium shadow-sm"
+                                        : "bg-emerald-50 text-emerald-200"
+                                  )}
+                                >
+                                  {esEspecial
+                                    ? fila.etiqueta
                                     : tieneContenido
-                                      ? "bg-white text-slate-800 font-medium shadow-sm"
-                                      : "bg-indigo-50 text-indigo-200"
-                                )}
-                              >
-                                {esEspecial
-                                  ? fila.etiqueta
-                                  : tieneContenido
-                                    ? contenido
-                                    : "—"}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mx-5 mt-2 text-xs text-indigo-500">
-                Este horario es una vista sugerida basada en las materias asignadas. Los horarios exactos y aulas se coordinan con la dirección.
-              </p>
+                                      ? contenido
+                                      : "—"}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* Turno Vespertino */}
+              <section className="rounded-3xl border border-orange-200 bg-orange-50 shadow-sm overflow-hidden">
+                <div className="border-b border-orange-100 bg-orange-100 px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <ClockIcon className="h-5 w-5 text-orange-600" />
+                    <span className="text-orange-900 font-bold text-xs uppercase tracking-wider">
+                      Turno Vespertino · 1:00 - 5:00
+                    </span>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-1">
+                    Vista sugerida de la distribución vespertina de esta sección.
+                  </p>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-[10px] font-bold text-orange-700 uppercase tracking-wider text-left border-b border-orange-200 bg-orange-100 sticky top-0 z-10">
+                          Horas
+                        </th>
+                        {DIAS.map((dia) => (
+                          <th
+                            key={dia}
+                            className="px-4 py-3 text-[10px] font-bold text-orange-700 uppercase tracking-wider text-center border-b border-orange-200 bg-orange-100 sticky top-0 z-10"
+                          >
+                            {dia}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-orange-100">
+                      {BLOQUES_VESPERTINO.map((fila) => {
+                        const esEspecial = fila.tipo !== "clase";
+                        return (
+                          <tr key={fila.clave} className="hover:bg-orange-50/30 transition">
+                            <td className="px-4 py-3 text-[10px] font-semibold text-orange-700 border-b border-orange-100 whitespace-nowrap bg-orange-50/40">
+                              {fila.etiqueta}
+                            </td>
+                            {DIAS.map((dia) => {
+                              const contenido = horarioVespertino[dia][fila.clave];
+                              const tieneContenido = contenido && contenido.trim() !== "";
+                              return (
+                                <td
+                                  key={dia}
+                                  className={cn(
+                                    "px-4 py-3 text-[10px] border-b border-orange-100 text-center rounded-lg",
+                                    esEspecial
+                                      ? "bg-orange-50 text-orange-300 italic font-light"
+                                      : tieneContenido
+                                        ? "bg-white text-slate-800 font-medium shadow-sm"
+                                        : "bg-orange-50 text-orange-200"
+                                  )}
+                                >
+                                  {esEspecial
+                                    ? fila.etiqueta
+                                    : tieneContenido
+                                      ? contenido
+                                      : "—"}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mx-5 mt-2 text-xs text-orange-500">
+                  Este horario es una vista sugerida basada en las materias asignadas. Los horarios exactos y aulas se coordinan con la dirección.
+                </p>
+              </section>
             </section>
           </>
         )}
