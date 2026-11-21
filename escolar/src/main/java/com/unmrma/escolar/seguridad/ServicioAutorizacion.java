@@ -334,7 +334,9 @@ public class ServicioAutorizacion {
     // ------------------------------------------------------------------
 
     public boolean puedeVerTodosLosMaestros() {
-        return esDirector() || esMaestro();
+        // Director, maestro y tutor pueden listar expedientes de maestros para
+        // poder enviar mensajes a un docente especifico.
+        return esDirector() || esMaestro() || esTutor();
     }
 
     public boolean puedeVerMaestro(Integer maestroId) {
