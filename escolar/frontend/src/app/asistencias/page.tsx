@@ -412,6 +412,8 @@ export default function AsistenciasPage() {
           observacion: form.observacion || null,
         });
       }
+      // Limpia el formulario, cierra el modal y recarga para poder cargar otra asistencia
+      resetForm();
       setModalAbierto(false);
       void cargar();
     } catch (err) {
