@@ -25,6 +25,7 @@ import type {
   Seccion,
 } from "@/lib/types";
 import { PlusIcon, TrashIcon, ClockIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
