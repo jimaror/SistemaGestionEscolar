@@ -300,6 +300,9 @@ export interface ConversacionParticipante {
   conversacionId: number;
   usuarioId: number;
   rolEnConversacion: string | null;
+  usuarioNombre: string | null;
+  usuarioApellidos: string | null;
+  usuarioRol: string | null;
   fechaUltimaLectura: string | null;
   activo: boolean | null;
 }

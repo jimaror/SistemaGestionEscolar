@@ -146,7 +146,12 @@ export default function MensajesPage() {
     if (!destinatario) return null;
     const maestro = maestros.find((m) => m.idUsuario === destinatario.usuarioId);
     const nombreMaestro = maestro ? `${maestro.nombre} ${maestro.apellido}`.trim() : null;
-    return { ...destinatario, nombre: nombreMaestro };
+    const nombreParticipante =
+      [destinatario.usuarioNombre, destinatario.usuarioApellidos]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || nombreMaestro;
+    return { ...destinatario, nombre: nombreParticipante };
   }, [participantesPorConversacion, seleccionada, usuarioId, maestros]);
 
   const filtradas = useMemo(() => {

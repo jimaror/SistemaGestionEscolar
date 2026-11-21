@@ -36,6 +36,12 @@ public class ConversacionParticipanteMapper {
         respuesta.setConversacionId(entidad.getConversacionId());
         respuesta.setUsuarioId(entidad.getUsuarioId());
         respuesta.setRolEnConversacion(entidad.getRolEnConversacion());
+        respuesta.setUsuarioNombre(
+                entidad.getUsuario() == null ? null : entidad.getUsuario().getNombres());
+        respuesta.setUsuarioApellidos(
+                entidad.getUsuario() == null ? null : entidad.getUsuario().getApellidos());
+        respuesta.setUsuarioRol(
+                entidad.getUsuario() == null ? null : entidad.getUsuario().getRol());
         respuesta.setFechaUltimaLectura(entidad.getFechaUltimaLectura());
         respuesta.setActivo(entidad.getActivo());
         return respuesta;
