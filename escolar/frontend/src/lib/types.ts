@@ -242,6 +242,14 @@ export interface Mensaje {
   leido: boolean | null;
 }
 
+export interface Destinatario {
+  usuarioId: number;
+  nombres: string | null;
+  apellidos: string | null;
+  rol: string | null;
+  username: string | null;
+}
+
 export interface Conversacion {
   id: number;
   titulo: string;

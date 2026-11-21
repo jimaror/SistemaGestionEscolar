@@ -1,5 +1,6 @@
 package com.unmrma.escolar.controlador;
 
+import com.unmrma.escolar.dtos.mensaje.DestinatarioRespuesta;
 import com.unmrma.escolar.dtos.mensaje.MensajeActualizarRequest;
 import com.unmrma.escolar.dtos.mensaje.MensajeCrearRequest;
 import com.unmrma.escolar.dtos.mensaje.MensajeRespuesta;
@@ -22,6 +23,15 @@ public class MensajeController {
     public MensajeController(MensajeService servicio, ServicioAutorizacion acceso) {
         this.servicio = servicio;
         this.acceso = acceso;
+    }
+
+    /**
+     * Lista unica de personas a las que se puede escribir: director, maestros,
+     * tutores y companeros de estudio. Disponible para los cuatro roles.
+     */
+    @GetMapping("/destinatarios")
+    public List<DestinatarioRespuesta> listarDestinatarios() {
+        return servicio.listarDestinatarios(acceso.usuarioId());
     }
 
     /**

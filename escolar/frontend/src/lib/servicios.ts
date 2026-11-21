@@ -14,6 +14,7 @@ import type {
   AsistenciaCrearRequest,
   Conversacion,
   ConversacionParticipante,
+  Destinatario,
   EntregaTarea,
   Evaluacion,
   GradoResumen,
@@ -116,6 +117,9 @@ export const listarMensajes = () => obtener<Mensaje[]>("/mensajes");
 export const listarParticipantes = () =>
   obtener<ConversacionParticipante[]>("/conversacion-participantes");
 export const listarTutores = () => obtener<TutorResumen[]>("/tutores");
+// Unico listado de destinatarios (director, maestros, tutores y alumnos).
+export const listarDestinatarios = () =>
+  obtener<Destinatario[]>("/mensajes/destinatarios");
 
 export async function crearConversacion(payload: {
   titulo: string;

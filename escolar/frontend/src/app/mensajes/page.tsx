@@ -15,10 +15,10 @@ import {
   crearConversacion,
   crearMensaje,
   listarConversaciones,
+  listarDestinatarios,
   listarMaestros,
   listarMensajes,
   listarParticipantes,
-  listarTutores,
   mensajeDeError,
 } from "@/lib/servicios";
 import { rolPermitido } from "@/lib/permisos";
@@ -27,7 +27,6 @@ import type {
   ConversacionParticipante,
   MaestroResumen,
   Mensaje,
-  TutorResumen,
 } from "@/lib/types";
 import { formatearFechaHora, normalizar } from "@/lib/format";
 import {
@@ -64,6 +63,7 @@ export default function MensajesPage() {
   const [nuevoDestinatarioId, setNuevoDestinatarioId] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
   const [enviandoNuevo, setEnviandoNuevo] = useState(false);
+  const [cargandoDestinatarios, setCargandoDestinatarios] = useState(false);
   const [errorNuevo, setErrorNuevo] = useState<string | null>(null);
   const hiloRef = useRef<HTMLDivElement | null>(null);
 
@@ -231,31 +231,31 @@ export default function MensajesPage() {
     setErrorNuevo(null);
     setNuevoDestinatarioId("");
     setNuevoContenido("");
+    setCargandoDestinatarios(true);
     try {
-      const [maes, tus] = await Promise.all([listarMaestros(), listarTutores()]);
-      const opciones: Array<{ usuarioId: number; label: string; rol: string }> = [];
-      maes.forEach((m) => {
-        const nombre = [m.nombre, m.apellido].filter(Boolean).join(" ").trim();
-        opciones.push({
-          usuarioId: m.idUsuario ?? 0,
-          label: `Maestro · ${nombre || `Expediente #${m.id}`}`,
-          rol: "Maestro",
+      const personas = await listarDestinatarios();
+      const opciones = personas
+        .filter((p) => p.usuarioId > 0)
+        .map((p) => {
+          const nombre = [p.nombres, p.apellidos].filter(Boolean).join(" ").trim();
+          const rol = p.rol || "Usuario";
+          return {
+            usuarioId: p.usuarioId,
+            label: `${rol} · ${nombre || p.username || `Usuario #${p.usuarioId}`}`,
+            rol,
+          };
         });
-      });
-      tus.forEach((t) => {
-        const u = t.usuario;
-        const uid = u?.id ?? null;
-        if (!uid) return;
-        const nombre = [u?.nombres, u?.apellidos].filter(Boolean).join(" ").trim();
-        opciones.push({
-          usuarioId: uid,
-          label: `Tutor · ${nombre || `Expediente #${t.id}`}`,
-          rol: "Tutor",
-        });
-      });
       setNuevosDestinatarios(opciones);
-    } catch {
+      if (opciones.length === 0) {
+        setErrorNuevo("No hay destinatarios disponibles en este momento.");
+      }
+    } catch (err) {
       setNuevosDestinatarios([]);
+      setErrorNuevo(
+        `No se pudo cargar la lista de destinatarios: ${mensajeDeError(err)}`,
+      );
+    } finally {
+      setCargandoDestinatarios(false);
     }
   };
 
@@ -594,14 +594,24 @@ export default function MensajesPage() {
               value={nuevoDestinatarioId}
               onChange={(e) => setNuevoDestinatarioId(e.target.value)}
               className="w-full"
+              disabled={cargandoDestinatarios || nuevosDestinatarios.length === 0}
             >
-              <option value="">Seleccioná el destinatario…</option>
+              <option value="">
+                {cargandoDestinatarios
+                  ? "Cargando destinatarios…"
+                  : nuevosDestinatarios.length === 0
+                    ? "No hay destinatarios disponibles"
+                    : "Seleccioná el destinatario…"}
+              </option>
               {nuevosDestinatarios.map((o) => (
                 <option key={`${o.usuarioId}-${o.rol}`} value={String(o.usuarioId)}>
                   {o.label}
                 </option>
               ))}
             </Select>
+            <p className="text-[11px] text-slate-400">
+              Podes escribirle al Director, maestros, tutores y compañeros de estudio.
+            </p>
           </div>
           <div className="space-y-1.5">
             <p className="text-sm font-semibold text-slate-700">Mensaje</p>
